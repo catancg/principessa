@@ -29,7 +29,8 @@ app.include_router(meta_webhook_router)
 
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-
+BASE_DIR = Path(__file__).resolve().parent.parent  # ajustá según tu estructura
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "app/assets")), name="static")
 @app.get("/join")
 def join():
     return FileResponse(Path("app/static/join.html"))
