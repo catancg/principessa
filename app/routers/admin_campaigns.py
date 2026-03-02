@@ -16,4 +16,10 @@ def require_admin_key(x_admin_key: str | None = Header(default=None)):
 
 @router.post("/queue-weekly", dependencies=[Depends(require_admin_key)])
 def admin_queue_weekly(db: Session = Depends(get_db)):
-    return queue_weekly_promo(db)
+    try:
+        info = queue_weekly_promo(db)
+        db.commit()
+        return info
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"queue-weekly failed: {repr(e)}")

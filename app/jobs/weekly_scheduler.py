@@ -21,7 +21,15 @@ def queue_weekly_promo(db, template_key="weekly_promo_v1", scheduled_for=None):
         scheduled_for = datetime.now(timezone.utc)
 
     campaign_id = "00000000-0000-0000-0000-000000000000"  # keep yours if you have one
-
+    db_info = db.execute(text("""
+    select
+    current_database() as db,
+    current_schema() as schema,
+    current_user as user,
+    inet_server_addr() as server_ip,
+    inet_server_port() as server_port
+    """)).mappings().first()
+    print("DB INFO (queue-weekly):", dict(db_info))
     result = db.execute(
     text("""
         with latest_consent as (
@@ -91,6 +99,12 @@ def queue_weekly_promo(db, template_key="weekly_promo_v1", scheduled_for=None):
         "scheduled_for": scheduled_for,
     },
 )
+    count_now = db.execute(text("select count(*) from public.message_outbox")).scalar_one()
+    print("OUTBOX COUNT (before commit):", count_now)
 
+    db.commit()
+
+    count_after = db.execute(text("select count(*) from public.message_outbox")).scalar_one()
+    print("OUTBOX COUNT (after commit):", count_after)
     inserted = result.fetchall()
     return {"inserted": len(inserted)}
