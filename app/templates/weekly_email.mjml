@@ -1,0 +1,14 @@
+<mjml>
+  <mj-body background-color="#F4FAF2">
+    <mj-section>
+      <mj-column>
+        <mj-text font-size="20px" font-weight="bold">
+          Email de prueba Pika Pika 🎁
+        </mj-text>
+        <mj-text>
+          Si estás viendo esto, MJML funciona correctamente.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
