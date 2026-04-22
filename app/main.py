@@ -3,6 +3,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
 
+from app.db.session import engine
+from app.models.base import Base
+
 from app.routers.health import router as health_router
 from app.routers.signup import router as signup_router
 from app.routers.unsubscribe import router as unsubscribe_router
@@ -13,6 +16,10 @@ from app.routers.admin_campaigns import router as admin_campaign_router
 from app.routers.admin_api import router as admin_api_router
 from app.routers.admin_ui import router as admin_ui_router
 from app.routers.meta_webhook import router as meta_webhook_router
+from app.routers.admin_variants import router as admin_variants_router
+
+Base.metadata.create_all(bind=engine, checkfirst=True)
+
 app = FastAPI(title="Baby Store Engagement API")
 
 app.include_router(health_router)
@@ -25,12 +32,17 @@ app.include_router(admin_campaign_router)
 app.include_router(admin_api_router)
 app.include_router(admin_ui_router)
 app.include_router(meta_webhook_router)
+app.include_router(admin_variants_router)
 
 
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-BASE_DIR = Path(__file__).resolve().parent.parent  # ajustá según tu estructura
+BASE_DIR = Path(__file__).resolve().parent.parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "app/assets")), name="static")
+
+_uploads_dir = BASE_DIR / "app" / "static" / "uploads"
+_uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(_uploads_dir)), name="uploads")
 @app.get("/join")
 def join():
     return FileResponse(Path("app/static/join.html"))
