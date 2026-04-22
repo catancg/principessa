@@ -34,7 +34,7 @@ WHATSAPP_URL = "https://wa.me/5493446586123"
 INSTAGRAM_URL = "https://instagram.com/pikapikagchu"
 INSTAGRAM_HANDLE = "@pikapikagchu"
 ADDRESS = "Rocamora 35, Gualeguaychu, Entre Rios"
-HOURS = "Lun a Sab"
+HOURS = "Lunes a Sabado"
 TERMS_LINE = "Válido presentando este email en el local Pika Pika"
 
 
