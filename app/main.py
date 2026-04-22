@@ -37,8 +37,12 @@ app.include_router(admin_variants_router)
 
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-BASE_DIR = Path(__file__).resolve().parent.parent  # ajustá según tu estructura
+BASE_DIR = Path(__file__).resolve().parent.parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "app/assets")), name="static")
+
+_uploads_dir = BASE_DIR / "app" / "static" / "uploads"
+_uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(_uploads_dir)), name="uploads")
 @app.get("/join")
 def join():
     return FileResponse(Path("app/static/join.html"))

@@ -194,6 +194,20 @@
         <textarea name="block_2_text" rows="2">Todo lo que necesitás para acompañar cada etapa.</textarea>
       </div>
 
+      <div class="section-label">Imagen promocional</div>
+
+      <div class="field">
+        <label>Subir imagen <span style="color:#9ca3af;font-weight:400;">(opcional · JPEG / PNG / WEBP · máx. 5 MB)</span></label>
+        <div id="imageDropzone" style="border:2px dashed #d1d5db;border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:border-color .15s;" onclick="document.getElementById('imageFile').click()">
+          <div id="imagePlaceholder" style="color:#9ca3af;font-size:13px;">Hacé clic para seleccionar una imagen</div>
+          <img id="imageThumbnail" src="" alt="" style="display:none;max-width:100%;max-height:160px;border-radius:8px;margin-top:8px;">
+          <div id="imageStatusRow" style="display:none;margin-top:8px;font-size:12px;font-weight:700;"></div>
+        </div>
+        <input type="file" id="imageFile" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="handleImageSelect(this)">
+        <input type="hidden" name="promo_image_url" id="promoImageUrl">
+        <button type="button" id="clearImageBtn" onclick="clearImage()" style="display:none;margin-top:6px;background:none;border:none;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">✕ Quitar imagen</button>
+      </div>
+
       <div class="section-label">Cierre (amarillo)</div>
 
       <div class="field">
@@ -330,6 +344,82 @@ Te esperamos en Pika Pika 🧸✨</textarea>
       btn.textContent = 'Enviar ahora';
     }
   }
+
+  // ── image upload ──────────────────────────────────────────────────────────
+
+  async function handleImageSelect(input) {
+    if (!input.files.length) return;
+    const file = input.files[0];
+
+    const dropzone  = document.getElementById('imageDropzone');
+    const statusRow = document.getElementById('imageStatusRow');
+    const thumb     = document.getElementById('imageThumbnail');
+    const clearBtn  = document.getElementById('clearImageBtn');
+    const placeholder = document.getElementById('imagePlaceholder');
+
+    // show local thumbnail immediately
+    const objectUrl = URL.createObjectURL(file);
+    thumb.src = objectUrl;
+    thumb.style.display = 'block';
+    placeholder.style.display = 'none';
+    statusRow.style.display = 'block';
+    statusRow.style.color = '#6b7280';
+    statusRow.textContent = 'Subiendo...';
+    dropzone.style.borderColor = '#93c5fd';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/admin/email-builder/upload-image', {
+        method: 'POST',
+        headers: { 'x-admin-key': adminKey },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        statusRow.style.color = '#ef4444';
+        statusRow.textContent = 'Error: ' + (data.detail || res.status);
+        dropzone.style.borderColor = '#fca5a5';
+        return;
+      }
+      document.getElementById('promoImageUrl').value = data.url;
+      statusRow.style.color = '#059669';
+      statusRow.textContent = '✓ Imagen lista';
+      dropzone.style.borderColor = '#6ee7b7';
+      clearBtn.style.display = 'inline-block';
+    } catch (e) {
+      statusRow.style.color = '#ef4444';
+      statusRow.textContent = 'Error de red: ' + e.message;
+      dropzone.style.borderColor = '#fca5a5';
+    }
+  }
+
+  function clearImage() {
+    document.getElementById('imageFile').value = '';
+    document.getElementById('promoImageUrl').value = '';
+    const thumb = document.getElementById('imageThumbnail');
+    thumb.src = '';
+    thumb.style.display = 'none';
+    document.getElementById('imagePlaceholder').style.display = 'block';
+    document.getElementById('imageStatusRow').style.display = 'none';
+    document.getElementById('clearImageBtn').style.display = 'none';
+    document.getElementById('imageDropzone').style.borderColor = '#d1d5db';
+  }
+
+  // drag-and-drop on the dropzone
+  const dropzone = document.getElementById('imageDropzone');
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.borderColor = '#93c5fd'; });
+  dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = document.getElementById('promoImageUrl').value ? '#6ee7b7' : '#d1d5db'; });
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    const dt = e.dataTransfer;
+    if (dt.files.length) {
+      const input = document.getElementById('imageFile');
+      input.files = dt.files;
+      handleImageSelect(input);
+    }
+  });
 
   // Ctrl+Enter / Cmd+Enter previews from any field
   document.addEventListener('keydown', e => {

@@ -5,7 +5,8 @@ from datetime import datetime, timezone
 from email.message import EmailMessage
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Form, Query
+import httpx
+from fastapi import APIRouter, Depends, Header, HTTPException, Form, Query, UploadFile, File
 from fastapi.responses import HTMLResponse, Response
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pydantic import BaseModel
@@ -145,6 +146,58 @@ class GenerateRequest(BaseModel):
     campaign_type: str = "weekly_promo"
 
 
+_ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+_UPLOADS_DIR = TEMPLATES_DIR.parent / "static" / "uploads"
+_SUPABASE_BUCKET = "email-images"
+_MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
+
+
+async def _save_image(content: bytes, filename: str, content_type: str) -> str:
+    """Upload to Supabase Storage if configured, otherwise fall back to local disk."""
+    supabase_url = os.getenv("SUPABASE_URL", "").rstrip("/")
+    service_key  = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+
+    if supabase_url and service_key and "your_service_role_key" not in service_key:
+        path = f"{uuid.uuid4().hex}_{filename}"
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                f"{supabase_url}/storage/v1/object/{_SUPABASE_BUCKET}/{path}",
+                content=content,
+                headers={
+                    "Authorization": f"Bearer {service_key}",
+                    "Content-Type": content_type,
+                },
+            )
+        print(f"[upload] Supabase response: {resp.status_code} | {resp.text[:500]}")
+        if resp.status_code not in (200, 201):
+            raise HTTPException(
+                status_code=500,
+                detail=f"Supabase upload failed (HTTP {resp.status_code}): {resp.text[:400]}",
+            )
+        return f"{supabase_url}/storage/v1/object/public/{_SUPABASE_BUCKET}/{path}"
+
+    # fallback: local disk (works for builder preview, not for email delivery)
+    _UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+    ext = Path(filename).suffix.lower() if filename else ".jpg"
+    local_name = f"{uuid.uuid4().hex}{ext}"
+    (_UPLOADS_DIR / local_name).write_bytes(content)
+    return f"/uploads/{local_name}"
+
+
+@router.post("/admin/email-builder/upload-image", dependencies=[Depends(require_admin_key)])
+async def upload_image(file: UploadFile = File(...)):
+    """Upload a promo image to Supabase Storage; returns its public URL."""
+    if file.content_type not in _ALLOWED_IMAGE_TYPES:
+        raise HTTPException(status_code=400, detail=f"Unsupported type '{file.content_type}'. Use JPEG, PNG, WEBP or GIF.")
+
+    content = await file.read()
+    if len(content) > _MAX_IMAGE_BYTES:
+        raise HTTPException(status_code=400, detail="Image too large (max 5 MB).")
+
+    url = await _save_image(content, file.filename or "image.jpg", file.content_type)
+    return {"url": url}
+
+
 @router.get("/admin/email-builder", response_class=HTMLResponse)
 def email_builder(key: str = Query(default=""), db: Session = Depends(get_db)):
     """Interactive email builder — fill in the template gaps and preview the result."""
@@ -169,9 +222,11 @@ def email_builder_render(
     block_2_title:    str = Form(default=""),
     block_2_text:     str = Form(default=""),
     closing_message:  str = Form(default=""),
+    promo_image_url:  str = Form(default=""),
 ):
     """Render ai_variant_email.html with the posted form values and return raw HTML."""
     base_url = BASE_URL.rstrip("/")
+    image_url = (base_url + promo_image_url) if promo_image_url.startswith("/") else promo_image_url
     template = jinja_env.get_template("ai_variant_email.html")
     html = template.render(
         logo_url          = f"{base_url}/static/logo.png",
@@ -185,6 +240,7 @@ def email_builder_render(
         block_2_title     = block_2_title,
         block_2_text      = block_2_text,
         closing_message   = closing_message,
+        promo_image_url   = image_url or None,
         terms_line        = TERMS_LINE,
         maps_url          = MAPS_URL,
         whatsapp_url      = WHATSAPP_URL,
@@ -212,6 +268,9 @@ def _render_builder_email(fields: dict, to_email: str = "#") -> tuple[str, str, 
     closing   = fields.get("closing_message", "")
     unsubscribe_url = f"{base_url}/unsubscribe?channel=email&value={to_email}" if to_email != "#" else "#"
 
+    raw_img = fields.get("promo_image_url", "").strip()
+    image_url = (base_url + raw_img) if raw_img.startswith("/") else raw_img
+
     text_body = f"{headline}\n\n{hp}\n\n{bi}\n\n{closing}\n\nDarte de baja:\n{unsubscribe_url}\n"
     html_body = jinja_env.get_template("ai_variant_email.html").render(
         logo_url         = f"{base_url}/static/logo.png",
@@ -225,6 +284,7 @@ def _render_builder_email(fields: dict, to_email: str = "#") -> tuple[str, str, 
         block_2_title    = fields.get("block_2_title", ""),
         block_2_text     = fields.get("block_2_text", ""),
         closing_message  = closing,
+        promo_image_url  = image_url or None,
         terms_line       = TERMS_LINE,
         maps_url         = MAPS_URL,
         whatsapp_url     = WHATSAPP_URL,
@@ -272,6 +332,7 @@ def builder_queue(
     block_2_title:    str = Form(default=""),
     block_2_text:     str = Form(default=""),
     closing_message:  str = Form(default=""),
+    promo_image_url:  str = Form(default=""),
     db: Session = Depends(get_db),
 ):
     """Queue the current builder email to all eligible customers."""
@@ -281,7 +342,7 @@ def builder_queue(
         headline=headline, highlight_phrase=highlight_phrase, body_intro=body_intro,
         block_1_emoji=block_1_emoji, block_1_title=block_1_title, block_1_text=block_1_text,
         block_2_emoji=block_2_emoji, block_2_title=block_2_title, block_2_text=block_2_text,
-        closing_message=closing_message,
+        closing_message=closing_message, promo_image_url=promo_image_url,
     )
 
     result = db.execute(text("""

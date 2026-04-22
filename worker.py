@@ -94,6 +94,7 @@ def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
             block_2_title=payload.get("block_2_title", ""),
             block_2_text=payload.get("block_2_text", ""),
             closing_message=closing_message,
+            promo_image_url=payload.get("promo_image_url") or None,
             terms_line=TERMS_LINE,
             maps_url=MAPS_URL,
             whatsapp_url=WHATSAPP_URL,
