@@ -197,6 +197,43 @@ async def _save_image(content: bytes, filename: str, content_type: str) -> str:
     return f"/uploads/{local_name}"
 
 
+@router.get("/admin/email-builder/images", dependencies=[Depends(require_builder_key)])
+async def list_images():
+    """List all images stored in the Supabase email-images bucket."""
+    supabase_url = os.getenv("SUPABASE_URL", "").rstrip("/")
+    service_key  = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+
+    if not supabase_url or not service_key:
+        return {"images": []}
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.post(
+                f"{supabase_url}/storage/v1/object/list/{_SUPABASE_BUCKET}",
+                json={"prefix": "", "limit": 100, "offset": 0, "sortBy": {"column": "created_at", "order": "desc"}},
+                headers={"Authorization": f"Bearer {service_key}", "Content-Type": "application/json"},
+            )
+        print(f"[images] Supabase list response: {resp.status_code} | {resp.text[:300]}")
+    except Exception as e:
+        print(f"[images] Exception: {repr(e)}")
+        raise HTTPException(status_code=500, detail=repr(e))
+
+    if resp.status_code != 200:
+        raise HTTPException(status_code=500, detail=f"Could not list images: {resp.text[:200]}")
+
+    files = resp.json()
+    images = [
+        {
+            "name": f["name"],
+            "url": f"{supabase_url}/storage/v1/object/public/{_SUPABASE_BUCKET}/{f['name']}",
+            "updated_at": f.get("updated_at", ""),
+        }
+        for f in files
+        if f.get("name")
+    ]
+    return {"images": images}
+
+
 @router.post("/admin/email-builder/upload-image", dependencies=[Depends(require_builder_key)])
 async def upload_image(file: UploadFile = File(...)):
     """Upload a promo image to Supabase Storage; returns its public URL."""
