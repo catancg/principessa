@@ -48,6 +48,17 @@ def require_admin_key(x_admin_key: str | None = Header(default=None)):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
+def require_builder_key(x_admin_key: str | None = Header(default=None)):
+    """Accepts either ADMIN_API_KEY or BUILDER_API_KEY."""
+    admin_key = os.getenv("ADMIN_API_KEY", "")
+    builder_key = os.getenv("BUILDER_API_KEY", "")
+    valid = {k for k in [admin_key, builder_key] if k}
+    if not valid:
+        raise HTTPException(status_code=500, detail="No API keys configured")
+    if x_admin_key not in valid:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
 def _render_variant_email_html(variant: EmailVariant, to_email: str = "preview@example.com") -> str:
     base_url = BASE_URL.rstrip("/")
     template = jinja_env.get_template("ai_variant_email.html")
@@ -184,7 +195,7 @@ async def _save_image(content: bytes, filename: str, content_type: str) -> str:
     return f"/uploads/{local_name}"
 
 
-@router.post("/admin/email-builder/upload-image", dependencies=[Depends(require_admin_key)])
+@router.post("/admin/email-builder/upload-image", dependencies=[Depends(require_builder_key)])
 async def upload_image(file: UploadFile = File(...)):
     """Upload a promo image to Supabase Storage; returns its public URL."""
     if file.content_type not in _ALLOWED_IMAGE_TYPES:
@@ -198,17 +209,19 @@ async def upload_image(file: UploadFile = File(...)):
     return {"url": url}
 
 
+@router.get("/builder-login", response_class=HTMLResponse)
+def builder_login():
+    page = jinja_env.get_template("builder_login.html")
+    return HTMLResponse(content=page.render())
+
+
 @router.get("/admin/email-builder", response_class=HTMLResponse)
-def email_builder(key: str = Query(default=""), db: Session = Depends(get_db)):
-    """Interactive email builder — fill in the template gaps and preview the result."""
-    expected = os.getenv("ADMIN_API_KEY", "")
-    if expected and key != expected:
-        raise HTTPException(status_code=401, detail="Pass ?key=<ADMIN_API_KEY> to access the builder")
+def email_builder():
     page = jinja_env.get_template("email_builder.html")
     return HTMLResponse(content=page.render())
 
 
-@router.post("/admin/email-builder/render", response_class=Response)
+@router.post("/admin/email-builder/render", response_class=Response, dependencies=[Depends(require_builder_key)])
 def email_builder_render(
     subject_line:     str = Form(default=""),
     preview_text:     str = Form(default=""),
@@ -318,7 +331,7 @@ def _smtp_send(to_email: str, subject: str, text_body: str, html_body: str):
         server.send_message(msg)
 
 
-@router.post("/admin/email-builder/queue", dependencies=[Depends(require_admin_key)])
+@router.post("/admin/email-builder/queue", dependencies=[Depends(require_builder_key)])
 def builder_queue(
     subject_line:     str = Form(default=""),
     preview_text:     str = Form(default=""),
@@ -382,7 +395,7 @@ def builder_queue(
     return {"queued": result.rowcount, "batch_id": batch_id}
 
 
-@router.post("/admin/email-builder/send-queued", dependencies=[Depends(require_admin_key)])
+@router.post("/admin/email-builder/send-queued", dependencies=[Depends(require_builder_key)])
 def builder_send_queued(db: Session = Depends(get_db)):
     """Send all queued ai_variant_v1 outbox items now."""
     mode       = os.getenv("EMAIL_SEND_MODE", "LIVE").upper()
