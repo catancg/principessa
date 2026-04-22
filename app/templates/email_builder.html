@@ -243,7 +243,8 @@ Te esperamos en Pika Pika 🧸✨</textarea>
 <script>
   const WIDTHS = { desktop: '640px', mobile: '375px' };
   let currentDevice = 'desktop';
-  const adminKey = new URLSearchParams(window.location.search).get('key') || '';
+  const adminKey = sessionStorage.getItem('builderKey') || '';
+  if (!adminKey) { window.location.replace('/builder-login'); }
 
   function setWidth(device) {
     currentDevice = device;
@@ -268,6 +269,7 @@ Te esperamos en Pika Pika 🧸✨</textarea>
     try {
       const res = await fetch('/admin/email-builder/render', {
         method: 'POST',
+        headers: { 'x-admin-key': adminKey },
         body: new FormData(document.getElementById('builderForm')),
       });
       if (!res.ok) { status.textContent = 'Error ' + res.status; return; }
