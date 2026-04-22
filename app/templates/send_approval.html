@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aprobación de envío — Pika Pika</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Nunito', Arial, sans-serif;
+      background: #F7FFF5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .icon { font-size: 48px; margin-bottom: 16px; }
+    h1 { font-size: 22px; font-weight: 900; color: #111; margin-bottom: 10px; }
+    p  { font-size: 15px; color: #6b7280; line-height: 1.6; }
+    .detail { margin-top: 12px; font-size: 13px; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    {% if action == "approved" %}
+      <div class="icon">✅</div>
+      <h1>Envío aprobado</h1>
+      <p>Se enviaron <strong>{{ sent }}</strong> emails correctamente.{% if failed %} {{ failed }} fallaron.{% endif %}</p>
+    {% elif action == "cancelled" %}
+      <div class="icon">🚫</div>
+      <h1>Envío cancelado</h1>
+      <p>El envío fue cancelado. Los emails siguen en cola y podés enviarlos más tarde.</p>
+    {% else %}
+      <div class="icon">⚠️</div>
+      <h1>Link inválido</h1>
+      <p>Este link ya fue usado o no es válido.</p>
+    {% endif %}
+    <p class="detail">Pika Pika — Gualeguaychú</p>
+  </div>
+</body>
+</html>

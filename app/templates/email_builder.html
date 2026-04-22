@@ -102,6 +102,25 @@
     }
     .preview-placeholder .big { font-size: 48px; }
     .preview-placeholder p { font-size: 14px; }
+
+    /* ── modal ── */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.45); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #fff; border-radius: 16px; padding: 32px 28px;
+      max-width: 360px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,.18);
+      text-align: center;
+    }
+    .modal h2 { font-size: 18px; font-weight: 900; margin-bottom: 10px; color: #111; }
+    .modal p  { font-size: 14px; color: #555; margin-bottom: 24px; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 10px; justify-content: center; }
+    .modal-actions .btn { min-width: 110px; }
+    .btn-cancel-modal { background: #e5e7eb; color: #374151; }
+    .btn-clear { background: #fee2e2; color: #991b1b; }
   </style>
 </head>
 <body>
@@ -112,6 +131,7 @@
   <div class="action-group">
     <span id="queueResult"></span>
     <button class="btn btn-queue" id="queueBtn" onclick="queueEmails()">Encolar envíos</button>
+    <button class="btn btn-clear" id="clearQueueBtn" onclick="clearQueue()">Limpiar cola</button>
   </div>
   <div class="action-group">
     <span id="sendResult"></span>
@@ -240,6 +260,18 @@ Te esperamos en Pika Pika 🧸✨</textarea>
 
 </div>
 
+<!-- ══ QUEUE CONFIRMATION MODAL ══ -->
+<div class="modal-backdrop" id="queueModal">
+  <div class="modal">
+    <h2>Confirmar cola de envíos</h2>
+    <p id="modalMsg">Cargando...</p>
+    <div class="modal-actions">
+      <button class="btn btn-cancel-modal" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-queue" id="modalConfirmBtn" onclick="confirmQueue()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const WIDTHS = { desktop: '640px', mobile: '375px' };
   let currentDevice = 'desktop';
@@ -290,10 +322,37 @@ Te esperamos en Pika Pika 🧸✨</textarea>
   }
 
   async function queueEmails() {
-    const btn = document.getElementById('queueBtn');
-    btn.classList.add('loading');
-    btn.textContent = 'Encolando...';
     setResult('queueResult', '', '');
+    const countBtn = document.getElementById('queueBtn');
+    countBtn.classList.add('loading');
+    countBtn.textContent = 'Verificando...';
+
+    try {
+      const res = await fetch('/admin/email-builder/eligible-count', {
+        headers: { 'x-admin-key': adminKey },
+      });
+      const data = await res.json();
+      if (!res.ok) { setResult('queueResult', 'Error: ' + (data.detail || res.status), 'err'); return; }
+
+      document.getElementById('modalMsg').textContent =
+        `Vas a encolar el email a ${data.count} clientes con consentimiento activo. ¿Confirmar?`;
+      document.getElementById('queueModal').classList.add('open');
+    } catch (e) {
+      setResult('queueResult', 'Error de red', 'err');
+    } finally {
+      countBtn.classList.remove('loading');
+      countBtn.textContent = 'Encolar envíos';
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('queueModal').classList.remove('open');
+  }
+
+  async function confirmQueue() {
+    const confirmBtn = document.getElementById('modalConfirmBtn');
+    confirmBtn.classList.add('loading');
+    confirmBtn.textContent = 'Encolando...';
 
     try {
       const res = await fetch('/admin/email-builder/queue', {
@@ -302,27 +361,45 @@ Te esperamos en Pika Pika 🧸✨</textarea>
         body: new FormData(document.getElementById('builderForm')),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setResult('queueResult', 'Error: ' + (data.detail || res.status), 'err');
-        return;
-      }
+      closeModal();
+      if (!res.ok) { setResult('queueResult', 'Error: ' + (data.detail || res.status), 'err'); return; }
       setResult('queueResult', data.queued + ' encolados ✓', 'ok');
+    } catch (e) {
+      closeModal();
+      setResult('queueResult', 'Error de red', 'err');
+    } finally {
+      confirmBtn.classList.remove('loading');
+      confirmBtn.textContent = 'Confirmar';
+    }
+  }
+
+  async function clearQueue() {
+    if (!confirm('¿Seguro que querés limpiar toda la cola? Esta acción no se puede deshacer.')) return;
+    const btn = document.getElementById('clearQueueBtn');
+    btn.classList.add('loading');
+    try {
+      const res = await fetch('/admin/email-builder/clear-queue', {
+        method: 'DELETE',
+        headers: { 'x-admin-key': adminKey },
+      });
+      const data = await res.json();
+      if (!res.ok) { setResult('queueResult', 'Error: ' + (data.detail || res.status), 'err'); return; }
+      setResult('queueResult', data.deleted + ' eliminados de la cola', 'info');
     } catch (e) {
       setResult('queueResult', 'Error de red', 'err');
     } finally {
       btn.classList.remove('loading');
-      btn.textContent = 'Encolar envíos';
     }
   }
 
   async function sendQueued() {
     const btn = document.getElementById('sendBtn');
     btn.classList.add('loading');
-    btn.textContent = 'Enviando...';
+    btn.textContent = 'Solicitando...';
     setResult('sendResult', '', '');
 
     try {
-      const res = await fetch('/admin/email-builder/send-queued', {
+      const res = await fetch('/admin/email-builder/request-send-approval', {
         method: 'POST',
         headers: { 'x-admin-key': adminKey },
       });
@@ -331,14 +408,8 @@ Te esperamos en Pika Pika 🧸✨</textarea>
         setResult('sendResult', 'Error: ' + (data.detail || res.status), 'err');
         return;
       }
-      const label = data.mode !== 'LIVE' ? ' [' + data.mode + ']' : '';
-      if (data.failed > 0) {
-        setResult('sendResult', data.sent + ' enviados / ' + data.failed + ' fallidos' + label, 'err');
-      } else if (data.sent === 0) {
-        setResult('sendResult', 'Nada en cola' + label, 'info');
-      } else {
-        setResult('sendResult', data.sent + ' enviados ✓' + label, 'ok');
-      }
+      setResult('sendResult', `Email de aprobación enviado (${data.count} en cola) ✓`, 'info');
+      btn.disabled = true;
     } catch (e) {
       setResult('sendResult', 'Error de red', 'err');
     } finally {

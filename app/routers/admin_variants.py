@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.email_variant import EmailVariant
+from app.models.send_approval import SendApproval
 from app.services.ai_copy_service import generate_variants
 
 router = APIRouter(tags=["variants"])
@@ -169,10 +170,11 @@ async def _save_image(content: bytes, filename: str, content_type: str) -> str:
     service_key  = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 
     if supabase_url and service_key and "your_service_role_key" not in service_key:
-        path = f"{uuid.uuid4().hex}_{filename}"
+        ext = Path(filename).suffix.lower() if filename else ".jpg"
+        safe_name = f"{uuid.uuid4().hex}{ext}"
         async with httpx.AsyncClient(timeout=30) as client:
             resp = await client.post(
-                f"{supabase_url}/storage/v1/object/{_SUPABASE_BUCKET}/{path}",
+                f"{supabase_url}/storage/v1/object/{_SUPABASE_BUCKET}/{safe_name}",
                 content=content,
                 headers={
                     "Authorization": f"Bearer {service_key}",
@@ -185,7 +187,7 @@ async def _save_image(content: bytes, filename: str, content_type: str) -> str:
                 status_code=500,
                 detail=f"Supabase upload failed (HTTP {resp.status_code}): {resp.text[:400]}",
             )
-        return f"{supabase_url}/storage/v1/object/public/{_SUPABASE_BUCKET}/{path}"
+        return f"{supabase_url}/storage/v1/object/public/{_SUPABASE_BUCKET}/{safe_name}"
 
     # fallback: local disk (works for builder preview, not for email delivery)
     _UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
@@ -331,6 +333,27 @@ def _smtp_send(to_email: str, subject: str, text_body: str, html_body: str):
         server.send_message(msg)
 
 
+def _send_approval_notification_send(queued_count: int, subject_preview: str, approve_url: str, cancel_url: str):
+    html = f"""
+    <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;">
+      <h2 style="color:#111;">Aprobación de envío — Pika Pika</h2>
+      <p style="color:#555;">Se solicitó enviar <strong>{queued_count} emails</strong>.</p>
+      <p style="color:#555;">Asunto: <em>{subject_preview}</em></p>
+      <div style="margin:28px 0;display:flex;gap:12px;">
+        <a href="{approve_url}" style="background:#16a34a;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;">✓ Aprobar envío</a>
+        <a href="{cancel_url}" style="background:#dc2626;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;">✕ Cancelar</a>
+      </div>
+      <p style="color:#9ca3af;font-size:12px;">Este link expira una vez usado.</p>
+    </div>
+    """
+    _smtp_send(
+        APPROVAL_NOTIFY_EMAIL,
+        f"⚠️ Aprobar envío de {queued_count} emails — Pika Pika",
+        f"Aprobar: {approve_url}\nCancelar: {cancel_url}",
+        html,
+    )
+
+
 @router.post("/admin/email-builder/queue", dependencies=[Depends(require_builder_key)])
 def builder_queue(
     subject_line:     str = Form(default=""),
@@ -395,10 +418,22 @@ def builder_queue(
     return {"queued": result.rowcount, "batch_id": batch_id}
 
 
+@router.delete("/admin/email-builder/clear-queue", dependencies=[Depends(require_builder_key)])
+def builder_clear_queue(db: Session = Depends(get_db)):
+    result = db.execute(text("""
+        DELETE FROM message_outbox
+        WHERE status = 'queued'
+          AND template_key = 'ai_variant_v1'
+          AND channel = 'email'
+    """))
+    db.commit()
+    return {"deleted": result.rowcount}
+
+
 @router.post("/admin/email-builder/send-queued", dependencies=[Depends(require_builder_key)])
 def builder_send_queued(db: Session = Depends(get_db)):
     """Send all queued ai_variant_v1 outbox items now."""
-    mode       = os.getenv("EMAIL_SEND_MODE", "LIVE").upper()
+    mode       = os.getenv("EMAIL_SEND_MODE", "TEST").upper()
     test_to    = os.getenv("TEST_TO_EMAIL", "").strip()
     smtp_ready = all(os.getenv(k) for k in ["SMTP_HOST", "SMTP_USERNAME", "SMTP_PASSWORD", "SMTP_FROM_EMAIL"])
 
@@ -417,7 +452,7 @@ def builder_send_queued(db: Session = Depends(get_db)):
         FOR UPDATE SKIP LOCKED
     """)).fetchall()
 
-    sent, failed, errors = 0, 0, []
+    sent_ids, failed_ids, errors = [], [], []
 
     for outbox_id, original_to, payload in rows:
         fields = dict(payload or {})
@@ -427,7 +462,7 @@ def builder_send_queued(db: Session = Depends(get_db)):
 
             if mode == "DRY_RUN":
                 print(f"DRY_RUN would send {outbox_id} -> {original_to}")
-                sent += 1
+                sent_ids.append(outbox_id)
                 continue
 
             to_addr = test_to if mode == "TEST" and test_to else original_to
@@ -440,19 +475,147 @@ def builder_send_queued(db: Session = Depends(get_db)):
                 )
 
             _smtp_send(to_addr, subject, text_body, html_body)
-
-            db.execute(text("UPDATE message_outbox SET status='sent', sent_at=now() WHERE id=:id"),
-                       {"id": outbox_id})
-            sent += 1
+            sent_ids.append(outbox_id)
 
         except Exception as e:
-            db.execute(text("UPDATE message_outbox SET status='failed' WHERE id=:id"),
-                       {"id": outbox_id})
-            failed += 1
+            failed_ids.append(outbox_id)
             errors.append({"id": str(outbox_id), "to": original_to, "error": repr(e)})
 
+    if sent_ids:
+        db.execute(text("UPDATE message_outbox SET status='sent', sent_at=now() WHERE id = ANY(:ids)"),
+                   {"ids": sent_ids})
+    if failed_ids:
+        db.execute(text("UPDATE message_outbox SET status='failed' WHERE id = ANY(:ids)"),
+                   {"ids": failed_ids})
+
     db.commit()
-    return {"sent": sent, "failed": failed, "mode": mode, "errors": errors}
+    return {"sent": len(sent_ids), "failed": len(failed_ids), "mode": mode, "errors": errors}
+
+
+@router.get("/admin/email-builder/eligible-count", dependencies=[Depends(require_builder_key)])
+def eligible_count(db: Session = Depends(get_db)):
+    """Return the number of customers eligible to receive the next email."""
+    row = db.execute(text("""
+        SELECT COUNT(*) AS n
+        FROM customer_identities ci
+        JOIN v_current_promotions_consent vpc
+          ON vpc.customer_id = ci.customer_id AND vpc.channel = 'email'
+        WHERE ci.channel = 'email'
+          AND vpc.status = 'granted'
+    """)).first()
+    return {"count": row.n if row else 0}
+
+
+@router.post("/admin/email-builder/request-send-approval", dependencies=[Depends(require_builder_key)])
+def request_send_approval(db: Session = Depends(get_db)):
+    """Create a send approval record and email the admin an approve/cancel link."""
+    queued_row = db.execute(text("""
+        SELECT COUNT(*) AS n, MIN(payload->>'subject_line') AS subject
+        FROM message_outbox
+        WHERE status = 'queued'
+          AND template_key = 'ai_variant_v1'
+          AND channel = 'email'
+          AND scheduled_for <= now()
+    """)).first()
+
+    queued_count = queued_row.n if queued_row else 0
+    subject_preview = (queued_row.subject or "Sin asunto") if queued_row else "Sin asunto"
+
+    approval = SendApproval(
+        token=uuid.uuid4(),
+        status="pending",
+        queued_count=queued_count,
+        subject_preview=subject_preview,
+    )
+    db.add(approval)
+    db.commit()
+    db.refresh(approval)
+
+    base = BASE_URL.rstrip("/")
+    approve_url = f"{base}/admin/email-builder/send-approval/{approval.token}/approve"
+    cancel_url  = f"{base}/admin/email-builder/send-approval/{approval.token}/cancel"
+
+    _send_approval_notification_send(
+        queued_count=queued_count,
+        subject_preview=subject_preview,
+        approve_url=approve_url,
+        cancel_url=cancel_url,
+    )
+
+    return {"status": "approval_sent", "count": queued_count}
+
+
+@router.get("/admin/email-builder/send-approval/{token}/approve", response_class=HTMLResponse)
+def approve_send(token: str, db: Session = Depends(get_db)):
+    approval = db.query(SendApproval).filter_by(token=token, status="pending").first()
+    if not approval:
+        return HTMLResponse("<h2>Este link ya fue usado o no es válido.</h2>", status_code=410)
+
+    approval.status = "approved"
+    approval.decided_at = datetime.now(timezone.utc)
+    db.commit()
+
+    # trigger the actual send
+    mode    = os.getenv("EMAIL_SEND_MODE", "TEST").upper()
+    test_to = os.getenv("TEST_TO_EMAIL", "").strip()
+
+    rows = db.execute(text("""
+        SELECT mo.id, ci.value AS to_email, mo.payload
+        FROM message_outbox mo
+        JOIN customer_identities ci ON ci.id = mo.to_identity_id
+        WHERE mo.status = 'queued'
+          AND mo.template_key = 'ai_variant_v1'
+          AND mo.channel = 'email'
+          AND mo.scheduled_for <= now()
+        ORDER BY mo.created_at
+        FOR UPDATE SKIP LOCKED
+    """)).fetchall()
+
+    sent_ids, failed_ids = [], []
+    for outbox_id, original_to, payload in rows:
+        fields = dict(payload or {})
+        fields["email"] = original_to
+        try:
+            subject, text_body, html_body = _render_builder_email(fields, to_email=original_to)
+            if mode == "DRY_RUN":
+                sent_ids.append(outbox_id)
+                continue
+            to_addr = test_to if mode == "TEST" and test_to else original_to
+            if mode == "TEST":
+                subject   = f"[TEST] {subject}"
+                text_body = f"MODO PRUEBA — original: {original_to}\n\n{text_body}"
+                html_body = (f"<div style='padding:8px;background:#fff3cd;font-size:12px;'>"
+                             f"MODO PRUEBA — original: {original_to}</div>" + html_body)
+            _smtp_send(to_addr, subject, text_body, html_body)
+            sent_ids.append(outbox_id)
+        except Exception:
+            failed_ids.append(outbox_id)
+
+    if sent_ids:
+        db.execute(text("UPDATE message_outbox SET status='sent', sent_at=now() WHERE id = ANY(:ids)"),
+                   {"ids": sent_ids})
+    if failed_ids:
+        db.execute(text("UPDATE message_outbox SET status='failed' WHERE id = ANY(:ids)"),
+                   {"ids": failed_ids})
+
+    db.commit()
+
+    page = jinja_env.get_template("send_approval.html")
+    return HTMLResponse(page.render(action="approved", sent=len(sent_ids), failed=len(failed_ids)))
+
+
+@router.get("/admin/email-builder/send-approval/{token}/cancel", response_class=HTMLResponse)
+def cancel_send(token: str, db: Session = Depends(get_db)):
+    approval = db.query(SendApproval).filter_by(token=token, status="pending").first()
+    if not approval:
+        return HTMLResponse("<h2>Este link ya fue usado o no es válido.</h2>", status_code=410)
+
+    approval.status = "cancelled"
+    approval.decided_at = datetime.now(timezone.utc)
+    db.commit()
+
+    page = jinja_env.get_template("send_approval.html")
+    return HTMLResponse(page.render(action="cancelled", sent=0, failed=0))
 
 
 @router.post("/admin/generate-variants", dependencies=[Depends(require_admin_key)])
