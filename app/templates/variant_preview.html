@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Revisar variante {{ variant_index }} — Pika Pika</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', Arial, sans-serif; background: #f3f4f6; color: #333; }
+
+    .top-bar {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .top-bar .badge {
+      background: #fce4ec;
+      color: #c2185b;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .top-bar h1 { font-size: 18px; font-weight: 900; color: #111; flex: 1; }
+    .top-bar .status-chip {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 99px;
+    }
+    .status-pending  { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #d1fae5; color: #065f46; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+    .status-sent     { background: #e0e7ff; color: #3730a3; }
+
+    .layout { display: flex; gap: 24px; padding: 24px; max-width: 1100px; margin: 0 auto; }
+
+    /* Email preview column */
+    .email-col { flex: 1; min-width: 0; }
+    .email-meta {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .email-meta-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: baseline; }
+    .email-meta-row:last-child { margin-bottom: 0; }
+    .email-meta-label { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; width: 80px; flex-shrink: 0; }
+    .email-meta-value { font-size: 14px; color: #111; }
+    .email-meta-subject { font-size: 16px; font-weight: 900; }
+
+    .email-frame-wrapper {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .email-frame-wrapper iframe {
+      width: 100%;
+      height: 580px;
+      border: none;
+      display: block;
+    }
+
+    /* Action column */
+    .action-col { width: 300px; flex-shrink: 0; }
+    .action-card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      position: sticky;
+      top: 80px;
+    }
+    .action-card h2 { font-size: 16px; font-weight: 900; margin-bottom: 6px; }
+    .action-card .hint { font-size: 13px; color: #6b7280; margin-bottom: 24px; line-height: 1.5; }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      text-align: center;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-approve { background: #10b981; color: #fff; margin-bottom: 12px; }
+    .btn-reject  { background: #fff; color: #ef4444; border: 2px solid #ef4444; }
+
+    .reject-form { display: none; margin-top: 16px; }
+    .reject-form textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 13px;
+      resize: vertical;
+      min-height: 80px;
+      margin-bottom: 10px;
+    }
+    .btn-reject-confirm { background: #ef4444; color: #fff; }
+
+    .done-state { text-align: center; padding: 16px 0; }
+    .done-state .done-icon { font-size: 40px; margin-bottom: 12px; }
+    .done-state p { font-size: 14px; color: #6b7280; line-height: 1.6; }
+    .done-state strong { color: #111; }
+
+    .meta-footer { margin-top: 20px; padding-top: 16px; border-top: 1px solid #f3f4f6; font-size: 12px; color: #9ca3af; line-height: 1.8; }
+
+    @media (max-width: 700px) {
+      .layout { flex-direction: column; padding: 16px; }
+      .action-col { width: 100%; }
+      .action-card { position: static; }
+      .email-frame-wrapper iframe { height: 420px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <span class="badge">Variante {{ variant_index }}</span>
+  <h1>Revisión de email — Pika Pika</h1>
+  <span class="status-chip status-{{ status }}">
+    {% if status == 'pending_approval' %}Pendiente{% elif status == 'approved' %}Aprobada{% elif status == 'rejected' %}Rechazada{% else %}{{ status }}{% endif %}
+  </span>
+</div>
+
+<div class="layout">
+
+  <div class="email-col">
+    <div class="email-meta">
+      <div class="email-meta-row">
+        <span class="email-meta-label">Asunto</span>
+        <span class="email-meta-value email-meta-subject">{{ subject_line }}</span>
+      </div>
+      <div class="email-meta-row">
+        <span class="email-meta-label">Preview</span>
+        <span class="email-meta-value">{{ preview_text }}</span>
+      </div>
+      <div class="email-meta-row">
+        <span class="email-meta-label">Campaña</span>
+        <span class="email-meta-value">{{ campaign_type }}</span>
+      </div>
+    </div>
+
+    <div class="email-frame-wrapper">
+      <iframe srcdoc="{{ email_html | e }}" title="Vista previa del email"></iframe>
+    </div>
+  </div>
+
+  <div class="action-col">
+    <div class="action-card">
+
+      {% if status == 'pending_approval' %}
+        <h2>Tu decisión</h2>
+        <p class="hint">Revisá el email a la izquierda y decidí si querés aprobar esta variante para enviarla a los clientes.</p>
+
+        <form id="approveForm" method="POST" action="/variants/{{ approval_token }}/approve">
+          <button type="submit" class="btn btn-approve">Aprobar variante</button>
+        </form>
+
+        <button class="btn btn-reject" onclick="toggleReject()">Rechazar</button>
+
+        <div class="reject-form" id="rejectForm">
+          <form method="POST" action="/variants/{{ approval_token }}/reject">
+            <textarea name="notes" placeholder="Motivo del rechazo (opcional)..."></textarea>
+            <button type="submit" class="btn btn-reject-confirm">Confirmar rechazo</button>
+          </form>
+        </div>
+
+      {% elif status == 'approved' %}
+        <div class="done-state">
+          <div class="done-icon">✅</div>
+          <p><strong>Variante aprobada.</strong><br>Un administrador confirmará el envío desde el panel.</p>
+        </div>
+
+      {% elif status == 'rejected' %}
+        <div class="done-state">
+          <div class="done-icon">❌</div>
+          <p><strong>Variante rechazada.</strong>
+          {% if reviewer_notes %}<br><em>"{{ reviewer_notes }}"</em>{% endif %}
+          </p>
+        </div>
+
+      {% elif status == 'sent' %}
+        <div class="done-state">
+          <div class="done-icon">📨</div>
+          <p><strong>Esta variante ya fue enviada</strong> a los clientes.</p>
+        </div>
+      {% endif %}
+
+      <div class="meta-footer">
+        Generado: {{ created_at }}<br>
+        Campaña: {{ campaign_type }}<br>
+        Variante {{ variant_index }} de {{ total_variants }}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function toggleReject() {
+    const form = document.getElementById('rejectForm');
+    form.style.display = form.style.display === 'block' ? 'none' : 'block';
+  }
+</script>
+</body>
+</html>

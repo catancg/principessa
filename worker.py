@@ -39,11 +39,12 @@ TERMS_LINE = "Válido presentando este email en el local Pika Pika"
 
 
 def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
-    if template_key == "weekly_promo_v1":
-        email = (payload.get("email") or "").strip()
-        base_url = BASE_URL.rstrip("/")
-        logo_url = f"{base_url}/static/logo.png"
+    email = (payload.get("email") or "").strip()
+    base_url = BASE_URL.rstrip("/")
+    unsubscribe_url = f"{base_url}/unsubscribe?channel=email&value={email}"
 
+    if template_key == "weekly_promo_v1":
+        logo_url = f"{base_url}/static/logo.png"
         subject = "Beneficios exclusivos para vos en Pika Pika"
         text_body = (
             "Hola!\n\n"
@@ -51,9 +52,8 @@ def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
             f"Ubicacion: {MAPS_URL}\n"
             f"WhatsApp: {WHATSAPP_URL}\n"
             f"Instagram: {INSTAGRAM_URL}\n\n"
-            f"Darte de baja:\n{base_url}/unsubscribe?channel=email&value={email}\n"
+            f"Darte de baja:\n{unsubscribe_url}\n"
         )
-
         template = jinja_env.get_template("pika_pika_weekly.html")
         html_body = template.render(
             logo_url=logo_url,
@@ -64,7 +64,44 @@ def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
             terms_line=TERMS_LINE,
             instagram_url=INSTAGRAM_URL,
             instagram_handle=INSTAGRAM_HANDLE,
-            unsubscribe_url=f"{base_url}/unsubscribe?channel=email&value={email}",
+            unsubscribe_url=unsubscribe_url,
+        )
+        return subject, text_body, html_body
+
+    if template_key == "ai_variant_v1":
+        subject = payload.get("subject_line", "Novedades de Pika Pika")
+        headline = payload.get("headline", "")
+        highlight_phrase = payload.get("highlight_phrase", "descuento especial")
+        body_intro = payload.get("body_intro", "")
+        closing_message = payload.get("closing_message", "")
+        text_body = (
+            f"{headline}\n\n"
+            f"{highlight_phrase}\n\n"
+            f"{body_intro}\n\n"
+            f"{closing_message}\n\n"
+            f"Darte de baja:\n{unsubscribe_url}\n"
+        )
+        template = jinja_env.get_template("ai_variant_email.html")
+        html_body = template.render(
+            logo_url=f"{base_url}/static/logo.png",
+            headline=headline,
+            highlight_phrase=highlight_phrase,
+            body_intro=body_intro,
+            block_1_emoji=payload.get("block_1_emoji", "🎁"),
+            block_1_title=payload.get("block_1_title", ""),
+            block_1_text=payload.get("block_1_text", ""),
+            block_2_emoji=payload.get("block_2_emoji", "👶"),
+            block_2_title=payload.get("block_2_title", ""),
+            block_2_text=payload.get("block_2_text", ""),
+            closing_message=closing_message,
+            terms_line=TERMS_LINE,
+            maps_url=MAPS_URL,
+            whatsapp_url=WHATSAPP_URL,
+            address=ADDRESS,
+            hours=HOURS,
+            instagram_url=INSTAGRAM_URL,
+            instagram_handle=INSTAGRAM_HANDLE,
+            unsubscribe_url=unsubscribe_url,
         )
         return subject, text_body, html_body
 
@@ -89,7 +126,7 @@ def send_smtp(to_email: str, subject: str, text_body: str, html_body: str | None
 
 def fetch_next_batch(db, batch_size: int = 25):
     rows = db.execute(text("""
-        select mo.id, mo.template_key, ci.value as to_email
+        select mo.id, mo.template_key, ci.value as to_email, mo.payload
         from message_outbox mo
         join customer_identities ci on ci.id = mo.to_identity_id
         where mo.status = 'queued'
@@ -137,10 +174,12 @@ def main():
                 time.sleep(3)
                 continue
 
-            for outbox_id, template_key, to_email in batch:
+            for outbox_id, template_key, to_email, payload in batch:
                 original_to = to_email
                 try:
-                    subject, text_body, html_body = render_email(template_key, {"email": original_to})
+                    render_payload = dict(payload or {})
+                    render_payload["email"] = original_to
+                    subject, text_body, html_body = render_email(template_key, render_payload)
 
                     if EMAIL_SEND_MODE == "DRY_RUN":
                         print("DRY_RUN -> Would send", outbox_id, "to:", original_to, "template:", template_key)

@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Email Builder — Pika Pika</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', Arial, sans-serif; background: #f3f4f6; color: #333; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ── top bar ── */
+    .topbar {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .topbar h1 { font-size: 17px; font-weight: 900; color: #111; flex: 1; }
+    .topbar .badge { background: #fce4ec; color: #c2185b; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .btn {
+      border: none; border-radius: 10px;
+      padding: 9px 18px; font-family: inherit; font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: opacity .15s; white-space: nowrap;
+    }
+    .btn:hover  { opacity: .82; }
+    .btn.loading, .btn:disabled { opacity: .5; pointer-events: none; }
+    .btn-preview { background: #5B8C5A; color: #fff; }
+    .btn-queue   { background: #2563eb; color: #fff; }
+    .btn-send    { background: #FF7A3D; color: #fff; }
+    .action-group { display: flex; align-items: center; gap: 8px; }
+    .result-tag {
+      font-size: 12px; font-weight: 700; padding: 4px 10px;
+      border-radius: 99px; white-space: nowrap;
+    }
+    .result-ok  { background: #d1fae5; color: #065f46; }
+    .result-err { background: #fee2e2; color: #991b1b; }
+    .result-info{ background: #e0e7ff; color: #3730a3; }
+
+    /* ── main split ── */
+    .split { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── form panel ── */
+    .form-panel {
+      width: 360px;
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid #e5e7eb;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .section-label {
+      font-size: 10px; font-weight: 900; color: #9ca3af;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      margin: 20px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .section-label:first-child { margin-top: 0; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 12px; font-weight: 700; color: #555; margin-bottom: 4px; }
+    .field input, .field textarea {
+      width: 100%; padding: 8px 10px;
+      border: 1px solid #d1d5db; border-radius: 8px;
+      font-family: inherit; font-size: 13px; color: #111;
+      resize: vertical; transition: border-color .15s;
+    }
+    .field input:focus, .field textarea:focus { outline: none; border-color: #5B8C5A; }
+    .field .hint { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+    .field-row { display: flex; gap: 8px; }
+    .field-row .field { flex: 1; min-width: 0; }
+    .field-row .field.emoji { flex: 0 0 64px; }
+    .field-row .field.emoji input { text-align: center; font-size: 18px; }
+
+    /* ── preview panel ── */
+    .preview-panel { flex: 1; overflow: hidden; display: flex; flex-direction: column; background: #e5e7eb; }
+    .preview-toolbar {
+      background: #fff; border-bottom: 1px solid #e5e7eb;
+      padding: 8px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+    }
+    .preview-toolbar span { font-size: 12px; color: #9ca3af; }
+    .device-btn {
+      background: none; border: 1px solid #d1d5db; border-radius: 6px;
+      padding: 4px 10px; font-size: 12px; font-family: inherit; cursor: pointer; color: #555;
+    }
+    .device-btn.active { background: #5B8C5A; color: #fff; border-color: #5B8C5A; }
+    .preview-wrap { flex: 1; overflow: auto; display: flex; justify-content: center; padding: 24px; }
+    .preview-wrap iframe {
+      background: #fff;
+      border: none;
+      border-radius: 4px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.12);
+      transition: width .2s;
+    }
+    .preview-placeholder {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100%; color: #9ca3af; gap: 8px; text-align: center;
+    }
+    .preview-placeholder .big { font-size: 48px; }
+    .preview-placeholder p { font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="badge">Builder</span>
+  <h1>Email Builder — Pika Pika</h1>
+  <div class="action-group">
+    <span id="queueResult"></span>
+    <button class="btn btn-queue" id="queueBtn" onclick="queueEmails()">Encolar envíos</button>
+  </div>
+  <div class="action-group">
+    <span id="sendResult"></span>
+    <button class="btn btn-send" id="sendBtn" onclick="sendQueued()">Enviar ahora</button>
+  </div>
+  <div class="action-group">
+    <span class="status-msg" id="previewStatus"></span>
+    <button class="btn btn-preview" id="previewBtn" onclick="renderPreview()">Previsualizar</button>
+  </div>
+</div>
+
+<div class="split">
+
+  <!-- ══════════════════════════ FORM PANEL -->
+  <div class="form-panel">
+    <form id="builderForm">
+
+      <div class="section-label">Inbox</div>
+
+      <div class="field">
+        <label>Asunto del email</label>
+        <input type="text" name="subject_line" maxlength="60"
+          value="¡Descuento especial esta semana en Pika Pika!">
+        <div class="hint">Máx. 60 caracteres</div>
+      </div>
+      <div class="field">
+        <label>Preview text (snippet del inbox)</label>
+        <input type="text" name="preview_text" maxlength="90"
+          value="Presentá este email y llevate un regalo especial 💛">
+        <div class="hint">Máx. 90 caracteres</div>
+      </div>
+
+      <div class="section-label">Hero</div>
+
+      <div class="field">
+        <label>Titular (headline)</label>
+        <textarea name="headline" rows="2">¡Esta semana tenemos algo especial para vos y tu bebé!</textarea>
+      </div>
+      <div class="field">
+        <label>Frase resaltada en amarillo</label>
+        <input type="text" name="highlight_phrase" value="20% de descuento en toda la tienda">
+        <div class="hint">3-6 palabras que van dentro del badge amarillo</div>
+      </div>
+      <div class="field">
+        <label>Oración introductoria (después del resaltado)</label>
+        <textarea name="body_intro" rows="2">Vení a visitarnos y aprovechá esta promo exclusiva para nuestros clientes registrados.</textarea>
+      </div>
+
+      <div class="section-label">Bloque 1 (azul)</div>
+
+      <div class="field-row">
+        <div class="field emoji">
+          <label>Emoji</label>
+          <input type="text" name="block_1_emoji" value="🧸">
+        </div>
+        <div class="field">
+          <label>Título de categoría</label>
+          <input type="text" name="block_1_title" maxlength="20" value="Juguetes">
+        </div>
+      </div>
+      <div class="field">
+        <label>Descripción</label>
+        <textarea name="block_1_text" rows="2">Creatividad, aprendizaje y diversión en un solo lugar.</textarea>
+      </div>
+
+      <div class="section-label">Bloque 2 (rosa)</div>
+
+      <div class="field-row">
+        <div class="field emoji">
+          <label>Emoji</label>
+          <input type="text" name="block_2_emoji" value="👶">
+        </div>
+        <div class="field">
+          <label>Título de categoría</label>
+          <input type="text" name="block_2_title" maxlength="20" value="Artículos para bebé">
+        </div>
+      </div>
+      <div class="field">
+        <label>Descripción</label>
+        <textarea name="block_2_text" rows="2">Todo lo que necesitás para acompañar cada etapa.</textarea>
+      </div>
+
+      <div class="section-label">Cierre (amarillo)</div>
+
+      <div class="field">
+        <label>Mensaje de cierre</label>
+        <textarea name="closing_message" rows="4">Gracias por acompañarnos 💛
+
+Nos encanta ser parte de cada regalo, cada juego y cada sonrisa.
+
+Te esperamos en Pika Pika 🧸✨</textarea>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- ══════════════════════════ PREVIEW PANEL -->
+  <div class="preview-panel">
+    <div class="preview-toolbar">
+      <span>Vista previa</span>
+      <button class="device-btn active" id="btn-desktop" onclick="setWidth('desktop')">Desktop</button>
+      <button class="device-btn" id="btn-mobile" onclick="setWidth('mobile')">Mobile</button>
+    </div>
+    <div class="preview-wrap" id="previewWrap">
+      <div class="preview-placeholder" id="placeholder">
+        <div class="big">✉️</div>
+        <p>Completá los campos y hacé clic en<br><strong>Previsualizar</strong> para ver el email.</p>
+      </div>
+      <iframe id="previewFrame" style="display:none; width:640px; height:100%;"></iframe>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const WIDTHS = { desktop: '640px', mobile: '375px' };
+  let currentDevice = 'desktop';
+  const adminKey = new URLSearchParams(window.location.search).get('key') || '';
+
+  function setWidth(device) {
+    currentDevice = device;
+    document.getElementById('previewFrame').style.width = WIDTHS[device];
+    document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-' + device).classList.add('active');
+  }
+
+  function setResult(elId, text, type) {
+    const el = document.getElementById(elId);
+    el.textContent = text;
+    el.className = 'result-tag result-' + type;
+  }
+
+  async function renderPreview() {
+    const btn = document.getElementById('previewBtn');
+    const status = document.getElementById('previewStatus');
+    btn.classList.add('loading');
+    btn.textContent = 'Generando...';
+    status.textContent = '';
+
+    try {
+      const res = await fetch('/admin/email-builder/render', {
+        method: 'POST',
+        body: new FormData(document.getElementById('builderForm')),
+      });
+      if (!res.ok) { status.textContent = 'Error ' + res.status; return; }
+
+      const html = await res.text();
+      const frame = document.getElementById('previewFrame');
+      frame.style.display = 'block';
+      frame.style.width = WIDTHS[currentDevice];
+      document.getElementById('placeholder').style.display = 'none';
+      frame.srcdoc = html;
+      status.textContent = new Date().toLocaleTimeString('es-AR');
+    } catch (e) {
+      status.textContent = 'Error: ' + e.message;
+    } finally {
+      btn.classList.remove('loading');
+      btn.textContent = 'Previsualizar';
+    }
+  }
+
+  async function queueEmails() {
+    const btn = document.getElementById('queueBtn');
+    btn.classList.add('loading');
+    btn.textContent = 'Encolando...';
+    setResult('queueResult', '', '');
+
+    try {
+      const res = await fetch('/admin/email-builder/queue', {
+        method: 'POST',
+        headers: { 'x-admin-key': adminKey },
+        body: new FormData(document.getElementById('builderForm')),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setResult('queueResult', 'Error: ' + (data.detail || res.status), 'err');
+        return;
+      }
+      setResult('queueResult', data.queued + ' encolados ✓', 'ok');
+    } catch (e) {
+      setResult('queueResult', 'Error de red', 'err');
+    } finally {
+      btn.classList.remove('loading');
+      btn.textContent = 'Encolar envíos';
+    }
+  }
+
+  async function sendQueued() {
+    const btn = document.getElementById('sendBtn');
+    btn.classList.add('loading');
+    btn.textContent = 'Enviando...';
+    setResult('sendResult', '', '');
+
+    try {
+      const res = await fetch('/admin/email-builder/send-queued', {
+        method: 'POST',
+        headers: { 'x-admin-key': adminKey },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setResult('sendResult', 'Error: ' + (data.detail || res.status), 'err');
+        return;
+      }
+      const label = data.mode !== 'LIVE' ? ' [' + data.mode + ']' : '';
+      if (data.failed > 0) {
+        setResult('sendResult', data.sent + ' enviados / ' + data.failed + ' fallidos' + label, 'err');
+      } else if (data.sent === 0) {
+        setResult('sendResult', 'Nada en cola' + label, 'info');
+      } else {
+        setResult('sendResult', data.sent + ' enviados ✓' + label, 'ok');
+      }
+    } catch (e) {
+      setResult('sendResult', 'Error de red', 'err');
+    } finally {
+      btn.classList.remove('loading');
+      btn.textContent = 'Enviar ahora';
+    }
+  }
+
+  // Ctrl+Enter / Cmd+Enter previews from any field
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') renderPreview();
+  });
+</script>
+</body>
+</html>
