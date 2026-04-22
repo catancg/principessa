@@ -95,14 +95,15 @@ def create_signup(db: Session, data) -> tuple[str, str]:
             text("""
                 insert into consents (customer_id, channel, purpose, status)
                 select :customer_id, 'email'::channel_type, 'promotions', 'granted'
-                where not exists (
-                    select 1
-                    from consents
-                    where customer_id = :customer_id
-                      and channel = 'email'::channel_type
-                      and purpose = 'promotions'
-                      and status = 'granted'
-                )
+                where coalesce(
+                    (select status::text from consents
+                     where customer_id = :customer_id
+                       and channel = 'email'::channel_type
+                       and purpose = 'promotions'
+                     order by created_at desc
+                     limit 1),
+                    'none'
+                ) != 'granted'
             """),
             {"customer_id": customer_id},
         )
