@@ -269,6 +269,7 @@ Te esperamos en Pika Pika 🧸✨</textarea>
     try {
       const res = await fetch('/admin/email-builder/render', {
         method: 'POST',
+        headers: { 'x-admin-key': adminKey },
         body: new FormData(document.getElementById('builderForm')),
       });
       if (!res.ok) { status.textContent = 'Error ' + res.status; return; }
