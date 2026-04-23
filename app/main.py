@@ -21,7 +21,7 @@ from app.routers.story_builder import router as story_builder_router
 
 Base.metadata.create_all(bind=engine, checkfirst=True)
 
-app = FastAPI(title="Baby Store Engagement API")
+app = FastAPI(title="Principessa Pastelería — API")
 
 app.include_router(health_router)
 app.include_router(signup_router)

@@ -4,16 +4,18 @@ import os
 from openai import OpenAI
 
 _STORE_CONTEXT = """
-Pika Pika es una tienda de ropa y artículos para bebés ubicada en Gualeguaychu, Entre Ríos, Argentina.
-Dirección: Rocamora 35, Gualeguaychu, Entre Ríos.
-WhatsApp: +54 9 3446 586123 | Instagram: @pikapikagchu | Horarios: Lun a Sáb.
-Los clientes se suscribieron voluntariamente para recibir promociones.
+Principessa es una pastelería premium ubicada en Ciudad de Buenos Aires, Argentina.
+WhatsApp: +54 9 11 7893 3096 | Instagram: @principessa.pasteleria
+Especialidad: tortas artesanales con ingredientes de primera calidad.
+Productos estrella: torta de ricota, cheesecake, torta Matilda, carrot cake, torta de ricota con dulce de leche, torta Balcarce.
+El foco está en reuniones familiares, cumpleaños, eventos especiales, fechas especiales y fines de semana largos.
+Los clientes se suscribieron voluntariamente para recibir novedades y promociones.
 """
 
 _SYSTEM_PROMPT = (
-    "Sos un experto en email marketing para tiendas de bebés en Argentina. "
-    "Escribís en español rioplatense, con tono cercano y auténtico. "
-    "Nunca usás mayúsculas innecesarias. Tus textos son breves y directos."
+    "Sos una experta en email marketing para pastelerías premium en Argentina. "
+    "Escribís en español rioplatense, con tono que combina calidez y elegancia. "
+    "Nunca usás mayúsculas innecesarias. Tus textos son breves, evocadores y directos."
 )
 
 # These are the exact gaps in the email template the AI must fill.
@@ -44,7 +46,7 @@ def generate_variants(prompt: str = "", num_variants: int = 2) -> list[dict]:
     campaign_context = prompt.strip() or "campaña semanal de promociones y novedades"
 
     user_message = f"""
-Generá {num_variants} variantes de email de marketing para una campaña semanal de Pika Pika.
+Generá {num_variants} variantes de email de marketing para una campaña semanal de Principessa Pastelería.
 
 Contexto de la tienda:
 {_STORE_CONTEXT}
@@ -54,8 +56,8 @@ Contexto de la campaña: {campaign_context}
 {_FIELD_SPEC}
 
 Las {num_variants} variantes deben ser claramente distintas en tono:
-- Variante 1: tono urgente / promocional (oferta, no te lo perdas, esta semana)
-- Variante 2: tono cálido / cercano (comunidad, confianza, familia)
+- Variante 1: tono especial / tentador (producto estrella, ocasión especial, no te lo perdas)
+- Variante 2: tono cálido / elegante (reunión familiar, momento único, calidad artesanal)
 
 Devolvé un JSON con la siguiente estructura:
 {{ "variants": [ {{...variante1...}}, {{...variante2...}} ] }}

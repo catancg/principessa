@@ -2,102 +2,107 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Pika Pika - Comunidad</title>
+  <title>Principessa Pastelería — Comunidad</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial; max-width: 420px; margin: 40px auto; }
+    body { font-family: 'Nunito', Arial, sans-serif; max-width: 420px; margin: 40px auto; padding: 0 16px; background: #FBF4EE; color: #3D1F0F; }
+    img.logo { display: block; margin: 0 auto 20px; max-width: 160px; height: auto; }
+    h2 { font-size: 20px; font-weight: 900; margin: 0 0 6px; text-align: center; color: #6B3217; }
+    p.subtitle { text-align: center; color: #7A5840; font-size: 14px; margin: 0 0 24px; }
     input, select, button {
       width: 100%; padding: 12px; margin-top: 12px; font-size: 16px;
-      box-sizing: border-box;
+      box-sizing: border-box; font-family: inherit;
     }
-    button { background:#ff7aa8; color:white; border:none; border-radius:8px; }
-    .section-title { margin-top: 18px; font-weight: 700; }
+    input, select {
+      border: 2px solid #E8D5C4; border-radius: 10px; background: #fff; color: #3D1F0F;
+    }
+    input:focus, select:focus { outline: none; border-color: #6B3217; }
+    button { background: #6B3217; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: opacity .15s; }
+    button:hover { opacity: .88; }
+    .section-title { margin-top: 20px; font-weight: 900; font-size: 14px; color: #6B3217; text-transform: uppercase; letter-spacing: 0.5px; }
     .checks { margin-top: 8px; }
     .check-row {
       display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; margin-top: 10px;
-      border: 1px solid #eee; border-radius: 10px;
+      padding: 10px 12px; margin-top: 8px;
+      border: 1px solid #E8D5C4; border-radius: 10px; background: #fff;
     }
-    .check-row input { width: auto; margin: 0; }
-    .muted { color:#666; font-size: 13px; margin-top: 8px; }
+    .check-row input { width: auto; margin: 0; padding: 0; border: none; }
+    .muted { color: #7A5840; font-size: 13px; margin-top: 8px; }
+    #msg { text-align: center; margin-top: 16px; font-weight: 700; color: #6B3217; }
   </style>
 </head>
 <body>
-<h2>Pika Pika </h2>
-<h2>Unite a nuestra comunidad 🎁</h2>
-<p>Recibí promociones especiales y regalos</p>
+  <img src="/static/logo.png" alt="Principessa Pastelería" class="logo" onerror="this.style.display='none'">
+  <h2>Unite a nuestra comunidad</h2>
+  <p class="subtitle">Recibí novedades, promos especiales y sorpresas dulces</p>
 
-<form id="form">
-  <input placeholder="Tu Nombre" name="name" required />
+  <form id="form">
+    <input placeholder="Tu nombre" name="name" required />
+    <input placeholder="Tu email (ejemplo@gmail.com)" name="email" type="email" required />
 
-  <input placeholder="Ingresá tu email (ejemplo@gmail.com)" name="email" type="email" required />
+    <div class="section-title">¿Qué te gusta más?</div>
+    <div class="checks">
+      <label class="check-row">
+        <input type="checkbox" name="interests" value="torta_ricota" />
+        Torta de ricota
+      </label>
+      <label class="check-row">
+        <input type="checkbox" name="interests" value="cheesecake" />
+        Cheesecake
+      </label>
+      <label class="check-row">
+        <input type="checkbox" name="interests" value="torta_matilda" />
+        Torta Matilda
+      </label>
+      <label class="check-row">
+        <input type="checkbox" name="interests" value="carrot_cake" />
+        Carrot cake
+      </label>
+      <label class="check-row">
+        <input type="checkbox" name="interests" value="ricota_dulce_leche" />
+        Torta de ricota con dulce de leche
+      </label>
+      <label class="check-row">
+        <input type="checkbox" name="interests" value="torta_balcarce" />
+        Torta Balcarce
+      </label>
+    </div>
 
-  <div class="section-title">¿Qué te interesa?</div>
-  <div class="checks">
-    <label class="check-row">
-      <input type="checkbox" name="interests" value="baby_items" />
-      Artículos para bebé
-    </label>
-    <label class="check-row">
-      <input type="checkbox" name="interests" value="toys" />
-      Juguetes
-    </label>
-    <label class="check-row">
-      <input type="checkbox" name="interests" value="cochesitos" />
-      Cochesitos
-    </label>
-    <label class="check-row">
-      <input type="checkbox" name="interests" value="cunas" />
-      Cunas
-    </label>
-  </div>
+    <p class="muted">Podés elegir más de una opción.</p>
 
-  <p class="muted">Podés elegir más de una opción.</p>
+    <button type="submit" style="margin-top: 20px;">Quiero recibir novedades</button>
+  </form>
 
-  <button>Unite</button>
-</form>
+  <p id="msg"></p>
 
-<p id="msg"></p>
+  <script>
+    const form = document.getElementById("form");
+    const msg = document.getElementById("msg");
 
-<script>
-const form = document.getElementById("form");
-const msg = document.getElementById("msg");
+    form.onsubmit = async (e) => {
+      e.preventDefault();
 
-form.onsubmit = async (e) => {
-  e.preventDefault();
+      const fd = new FormData(form);
+      const name = (fd.get("name") || "").toString().trim();
+      const email = (fd.get("email") || "").toString().trim();
+      const interests = fd.getAll("interests").map(v => v.toString());
 
-  const fd = new FormData(form);
+      const payload = { name, email, interests, consent_promotions: true };
 
-  const name = (fd.get("name") || "").toString().trim();
-  const email = (fd.get("email") || "").toString().trim();
+      const res = await fetch("/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
 
-  // collect multiple checkbox values
-  const interests = fd.getAll("interests").map(v => v.toString());
-
-  const payload = {
-    name,
-    email,
-    interests,
-    consent_promotions: true
-  };
-
-  const res = await fetch("/signup", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-
-  if (res.ok) {
-    msg.innerText = "¡Ya sos parte! 🎉";
-    form.reset();
-  } else {
-    const text = await res.text();
-    msg.innerText = `Ocurrió un error. Probá nuevamente. (${res.status})`;
-    // If you want more debug:
-    // msg.innerText = `Error (${res.status}): ${text}`;
-  }
-};
-</script>
-
+      if (res.ok) {
+        msg.innerText = "¡Bienvenida a Principessa! Pronto vas a recibir nuestras novedades.";
+        form.reset();
+      } else {
+        msg.innerText = `Ocurrió un error. Probá nuevamente. (${res.status})`;
+      }
+    };
+  </script>
 </body>
 </html>

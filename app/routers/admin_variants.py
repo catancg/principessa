@@ -24,13 +24,13 @@ BASE_URL = os.getenv("APP_BASE_URL", "http://127.0.0.1:8000")
 APPROVAL_NOTIFY_EMAIL = "catan.994@gmail.com"
 NUM_VARIANTS = 2
 
-MAPS_URL = "https://www.google.com/maps/place/Pika+pika/@-33.0094136,-58.5212939,17z"
-WHATSAPP_URL = "https://wa.me/5493446586123"
-INSTAGRAM_URL = "https://instagram.com/pikapikagchu"
-INSTAGRAM_HANDLE = "@pikapikagchu"
-ADDRESS = "Rocamora 35, Gualeguaychu, Entre Rios"
-HOURS = "Lunes a Sabado"
-TERMS_LINE = "Válido presentando este email en el local Pika Pika"
+MAPS_URL = "https://maps.google.com/?q=Principessa+Pasteleria+Buenos+Aires"
+WHATSAPP_URL = "https://wa.me/5491178933096"
+INSTAGRAM_URL = "https://instagram.com/principessa.pasteleria"
+INSTAGRAM_HANDLE = "@principessa.pasteleria"
+ADDRESS = "Ciudad de Buenos Aires"
+HOURS = "Consultá horarios por Instagram"
+TERMS_LINE = "Válido presentando este email en la pastelería Principessa"
 
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 jinja_env = Environment(
@@ -93,7 +93,7 @@ def _send_approval_notification(variants: list[EmailVariant]):
     smtp_port = int(os.getenv("SMTP_PORT", "587"))
     smtp_user = os.getenv("SMTP_USERNAME")
     smtp_pass = os.getenv("SMTP_PASSWORD")
-    from_name = os.getenv("SMTP_FROM_NAME", "Pika Pika")
+    from_name = os.getenv("SMTP_FROM_NAME", "Principessa Pastelería")
     from_email = os.getenv("SMTP_FROM_EMAIL")
 
     if not all([smtp_host, smtp_user, smtp_pass, from_email]):
@@ -108,26 +108,26 @@ def _send_approval_notification(variants: list[EmailVariant]):
     links_html = "".join(
         f'<p style="margin:8px 0;">'
         f'<a href="{base}/variants/{v.approval_token}/preview" '
-        f'style="color:#FF7A3D;font-weight:bold;font-size:15px;">Ver Variante {v.variant_index} — "{v.subject_line}" →</a>'
+        f'style="color:#6B3217;font-weight:bold;font-size:15px;">Ver Variante {v.variant_index} — "{v.subject_line}" →</a>'
         f'</p>'
         for v in variants
     )
 
     text_body = (
         f"Hola!\n\n"
-        f"Se generaron {NUM_VARIANTS} variantes de email para la campaña semanal de Pika Pika.\n\n"
+        f"Se generaron {NUM_VARIANTS} variantes de email para la campaña semanal de Principessa Pastelería.\n\n"
         f"Revisalas y aprobá la que más te guste:\n{links_text}\n\n"
         f"Una vez que apruebes una, confirmá el envío desde el panel de admin.\n"
     )
     html_body = f"""
-    <div style="font-family:'Nunito',Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#F7FFF5;">
+    <div style="font-family:'Nunito',Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#FBF4EE;">
       <div style="background:#fff;border-radius:20px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.06);">
-        <h2 style="color:#5B8C5A;font-size:22px;margin:0 0 8px;">Nuevas variantes de email</h2>
+        <h2 style="color:#6B3217;font-size:22px;margin:0 0 8px;">Nuevas variantes de email</h2>
         <p style="color:#555;font-size:14px;margin:0 0 24px;">
           Se generaron <strong>{NUM_VARIANTS} variantes</strong> para la campaña semanal.<br>
           Hacé clic en cada una para ver la vista previa y decidir.
         </p>
-        <div style="background:#F7FFF5;border-radius:12px;padding:16px 20px;">
+        <div style="background:#FBF4EE;border-radius:12px;padding:16px 20px;">
           {links_html}
         </div>
         <hr style="margin:24px 0;border:none;border-top:1px solid #e5e7eb;">
@@ -141,7 +141,7 @@ def _send_approval_notification(variants: list[EmailVariant]):
     msg = EmailMessage()
     msg["From"] = f"{from_name} <{from_email}>"
     msg["To"] = APPROVAL_NOTIFY_EMAIL
-    msg["Subject"] = f"[Pika Pika] Revisá las {NUM_VARIANTS} variantes de email"
+    msg["Subject"] = f"[Principessa] Revisá las {NUM_VARIANTS} variantes de email"
     msg.set_content(text_body)
     msg.add_alternative(html_body, subtype="html")
 
@@ -313,7 +313,7 @@ def _form_fields():
 def _render_builder_email(fields: dict, to_email: str = "#") -> tuple[str, str, str]:
     """Returns (subject, text_body, html_body) from raw form field dict."""
     base_url = BASE_URL.rstrip("/")
-    subject   = fields.get("subject_line") or "Novedades de Pika Pika"
+    subject   = fields.get("subject_line") or "Novedades de Principessa Pastelería"
     headline  = fields.get("headline", "")
     hp        = fields.get("highlight_phrase", "")
     bi        = fields.get("body_intro", "")
@@ -354,7 +354,7 @@ def _smtp_send(to_email: str, subject: str, text_body: str, html_body: str):
     port      = int(os.getenv("SMTP_PORT", "587"))
     user      = os.getenv("SMTP_USERNAME")
     password  = os.getenv("SMTP_PASSWORD")
-    from_name = os.getenv("SMTP_FROM_NAME", "Pika Pika")
+    from_name = os.getenv("SMTP_FROM_NAME", "Principessa Pastelería")
     from_addr = os.getenv("SMTP_FROM_EMAIL")
 
     msg = EmailMessage()
@@ -373,7 +373,7 @@ def _smtp_send(to_email: str, subject: str, text_body: str, html_body: str):
 def _send_approval_notification_send(queued_count: int, subject_preview: str, approve_url: str, cancel_url: str):
     html = f"""
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;">
-      <h2 style="color:#111;">Aprobación de envío — Pika Pika</h2>
+      <h2 style="color:#111;">Aprobación de envío — Principessa Pastelería</h2>
       <p style="color:#555;">Se solicitó enviar <strong>{queued_count} emails</strong>.</p>
       <p style="color:#555;">Asunto: <em>{subject_preview}</em></p>
       <div style="margin:28px 0;display:flex;gap:12px;">
@@ -385,7 +385,7 @@ def _send_approval_notification_send(queued_count: int, subject_preview: str, ap
     """
     _smtp_send(
         APPROVAL_NOTIFY_EMAIL,
-        f"⚠️ Aprobar envío de {queued_count} emails — Pika Pika",
+        f"⚠️ Aprobar envío de {queued_count} emails — Principessa Pastelería",
         f"Aprobar: {approve_url}\nCancelar: {cancel_url}",
         html,
     )
@@ -765,13 +765,13 @@ def approve_variant(token: str, db: Session = Depends(get_db)):
     return HTMLResponse(content=f"""
     <!doctype html><html lang="es"><head>
       <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-      <title>Aprobada — Pika Pika</title>
+      <title>Aprobada — Principessa Pastelería</title>
       <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
-      <style>body{{font-family:'Nunito',Arial,sans-serif;background:#F7FFF5;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}
+      <style>body{{font-family:'Nunito',Arial,sans-serif;background:#FBF4EE;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}
       .card{{background:#fff;border-radius:20px;padding:48px 40px;text-align:center;max-width:420px;box-shadow:0 4px 24px rgba(0,0,0,.08)}}
-      .icon{{font-size:52px;margin-bottom:16px}} h1{{font-size:22px;font-weight:900;color:#5B8C5A;margin-bottom:8px}}
+      .icon{{font-size:52px;margin-bottom:16px}} h1{{font-size:22px;font-weight:900;color:#6B3217;margin-bottom:8px}}
       p{{color:#6b7280;font-size:15px;line-height:1.6;margin-bottom:24px}}
-      a{{color:#FF7A3D;font-weight:700;text-decoration:none}}</style>
+      a{{color:#6B3217;font-weight:700;text-decoration:none}}</style>
     </head><body>
       <div class="card">
         <div class="icon">✅</div>
@@ -806,13 +806,13 @@ def reject_variant(token: str, notes: str = Form(default=""), db: Session = Depe
     return HTMLResponse(content=f"""
     <!doctype html><html lang="es"><head>
       <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-      <title>Rechazada — Pika Pika</title>
+      <title>Rechazada — Principessa Pastelería</title>
       <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
-      <style>body{{font-family:'Nunito',Arial,sans-serif;background:#F7FFF5;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}
+      <style>body{{font-family:'Nunito',Arial,sans-serif;background:#FBF4EE;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}
       .card{{background:#fff;border-radius:20px;padding:48px 40px;text-align:center;max-width:420px;box-shadow:0 4px 24px rgba(0,0,0,.08)}}
       .icon{{font-size:52px;margin-bottom:16px}} h1{{font-size:22px;font-weight:900;color:#111;margin-bottom:8px}}
       p{{color:#6b7280;font-size:15px;line-height:1.6;margin-bottom:8px}}
-      a{{color:#FF7A3D;font-weight:700;text-decoration:none}}</style>
+      a{{color:#6B3217;font-weight:700;text-decoration:none}}</style>
     </head><body>
       <div class="card">
         <div class="icon">❌</div>

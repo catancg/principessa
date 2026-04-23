@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Email Builder — Pika Pika</title>
+  <title>Email Builder — Principessa Pastelería</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,9 +29,9 @@
     }
     .btn:hover  { opacity: .82; }
     .btn.loading, .btn:disabled { opacity: .5; pointer-events: none; }
-    .btn-preview { background: #5B8C5A; color: #fff; }
+    .btn-preview { background: #8B5E3C; color: #fff; }
     .btn-queue   { background: #2563eb; color: #fff; }
-    .btn-send    { background: #FF7A3D; color: #fff; }
+    .btn-send    { background: #6B3217; color: #fff; }
     .action-group { display: flex; align-items: center; gap: 8px; }
     .result-tag {
       font-size: 12px; font-weight: 700; padding: 4px 10px;
@@ -69,7 +69,7 @@
       font-family: inherit; font-size: 13px; color: #111;
       resize: vertical; transition: border-color .15s;
     }
-    .field input:focus, .field textarea:focus { outline: none; border-color: #5B8C5A; }
+    .field input:focus, .field textarea:focus { outline: none; border-color: #6B3217; }
     .field .hint { font-size: 11px; color: #9ca3af; margin-top: 3px; }
     .field-row { display: flex; gap: 8px; }
     .field-row .field { flex: 1; min-width: 0; }
@@ -87,7 +87,7 @@
       background: none; border: 1px solid #d1d5db; border-radius: 6px;
       padding: 4px 10px; font-size: 12px; font-family: inherit; cursor: pointer; color: #555;
     }
-    .device-btn.active { background: #5B8C5A; color: #fff; border-color: #5B8C5A; }
+    .device-btn.active { background: #6B3217; color: #fff; border-color: #6B3217; }
     .preview-wrap { flex: 1; overflow: auto; display: flex; justify-content: center; padding: 24px; }
     .preview-wrap iframe {
       background: #fff;
@@ -127,7 +127,7 @@
 
 <div class="topbar">
   <span class="badge">Builder</span>
-  <h1>Email Builder — Pika Pika</h1>
+  <h1>Email Builder — Principessa Pastelería</h1>
   <div class="action-group">
     <span id="queueResult"></span>
     <button class="btn btn-queue" id="queueBtn" onclick="queueEmails()">Encolar envíos</button>
@@ -154,7 +154,7 @@
       <div class="field">
         <label>Asunto del email</label>
         <input type="text" name="subject_line" maxlength="60"
-          value="¡Descuento especial esta semana en Pika Pika!">
+          value="¡Algo especial para vos esta semana en Principessa!">
         <div class="hint">Máx. 60 caracteres</div>
       </div>
       <div class="field">
@@ -168,50 +168,50 @@
 
       <div class="field">
         <label>Titular (headline)</label>
-        <textarea name="headline" rows="2">¡Esta semana tenemos algo especial para vos y tu bebé!</textarea>
+        <textarea name="headline" rows="2">¡Esta semana tenemos algo irresistible para endulzar tu momento!</textarea>
       </div>
       <div class="field">
-        <label>Frase resaltada en amarillo</label>
-        <input type="text" name="highlight_phrase" value="10% de descuento en toda la tienda">
-        <div class="hint">3-6 palabras que van dentro del badge amarillo</div>
+        <label>Frase resaltada</label>
+        <input type="text" name="highlight_phrase" value="un regalo dulce especial">
+        <div class="hint">3-6 palabras que van dentro del badge resaltado</div>
       </div>
       <div class="field">
         <label>Oración introductoria (después del resaltado)</label>
-        <textarea name="body_intro" rows="2">Vení a visitarnos y aprovechá esta promo exclusiva para nuestros clientes registrados.</textarea>
+        <textarea name="body_intro" rows="2">Vení a visitarnos y disfrutá de nuestras tortas artesanales con ingredientes de primera calidad.</textarea>
       </div>
 
-      <div class="section-label">Bloque 1 (azul)</div>
-
-      <div class="field-row">
-        <div class="field emoji">
-          <label>Emoji</label>
-          <input type="text" name="block_1_emoji" value="🧸">
-        </div>
-        <div class="field">
-          <label>Título de categoría</label>
-          <input type="text" name="block_1_title" maxlength="20" value="Juguetes">
-        </div>
-      </div>
-      <div class="field">
-        <label>Descripción</label>
-        <textarea name="block_1_text" rows="2">Creatividad, aprendizaje y diversión en un solo lugar.</textarea>
-      </div>
-
-      <div class="section-label">Bloque 2 (rosa)</div>
+      <div class="section-label">Bloque 1</div>
 
       <div class="field-row">
         <div class="field emoji">
           <label>Emoji</label>
-          <input type="text" name="block_2_emoji" value="👶">
+          <input type="text" name="block_1_emoji" value="🎂">
         </div>
         <div class="field">
-          <label>Título de categoría</label>
-          <input type="text" name="block_2_title" maxlength="20" value="Artículos para bebé">
+          <label>Título</label>
+          <input type="text" name="block_1_title" maxlength="20" value="Tortas clásicas">
         </div>
       </div>
       <div class="field">
         <label>Descripción</label>
-        <textarea name="block_2_text" rows="2">Todo lo que necesitás para acompañar cada etapa.</textarea>
+        <textarea name="block_1_text" rows="2">Torta de ricota, Balcarce y Matilda elaboradas con los mejores ingredientes.</textarea>
+      </div>
+
+      <div class="section-label">Bloque 2</div>
+
+      <div class="field-row">
+        <div class="field emoji">
+          <label>Emoji</label>
+          <input type="text" name="block_2_emoji" value="✨">
+        </div>
+        <div class="field">
+          <label>Título</label>
+          <input type="text" name="block_2_title" maxlength="20" value="Especialidades">
+        </div>
+      </div>
+      <div class="field">
+        <label>Descripción</label>
+        <textarea name="block_2_text" rows="2">Cheesecake y carrot cake para ocasiones que merecen algo único.</textarea>
       </div>
 
       <div class="section-label">Imagen promocional</div>
@@ -231,15 +231,15 @@
         </div>
       </div>
 
-      <div class="section-label">Cierre (amarillo)</div>
+      <div class="section-label">Cierre</div>
 
       <div class="field">
         <label>Mensaje de cierre</label>
-        <textarea name="closing_message" rows="4">Gracias por acompañarnos 💛
+        <textarea name="closing_message" rows="4">Gracias por ser parte de nuestra comunidad ✨
 
-Nos encanta ser parte de cada regalo, cada juego y cada sonrisa.
+Cada torta es elaborada con amor y los mejores ingredientes.
 
-Te esperamos en Pika Pika 🧸✨</textarea>
+Te esperamos en Principessa Pastelería 🎂</textarea>
       </div>
 
     </form>
@@ -501,7 +501,7 @@ Te esperamos en Pika Pika 🧸✨</textarea>
       data.images.forEach(img => {
         const div = document.createElement('div');
         div.style.cssText = 'cursor:pointer;border:2px solid #e5e7eb;border-radius:10px;overflow:hidden;transition:border-color .15s;';
-        div.onmouseenter = () => div.style.borderColor = '#FF7A3D';
+        div.onmouseenter = () => div.style.borderColor = '#6B3217';
         div.onmouseleave = () => div.style.borderColor = '#e5e7eb';
         div.innerHTML = `<img src="${img.url}" style="width:100%;height:100px;object-fit:cover;display:block;" loading="lazy">`;
         div.onclick = () => selectExistingImage(img.url);

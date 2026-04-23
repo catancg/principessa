@@ -25,7 +25,7 @@ def admin_ui(key: str | None = Query(default=None),
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pika Pika Admin</title>
+  <title>Principessa Pastelería — Admin</title>
   <style>
     body {{ font-family: system-ui, Arial; margin: 20px; }}
     .row {{ display:flex; gap:12px; flex-wrap:wrap; }}
@@ -40,7 +40,7 @@ def admin_ui(key: str | None = Query(default=None),
   </style>
 </head>
 <body>
-  <h2>Admin Dashboard — Pika Pika</h2>
+  <h2>Admin Dashboard — Principessa Pastelería</h2>
   <p class="muted">Este panel usa tu <code>x-admin-key</code> (ya validada en el server).</p>
 
   <div class="row">

@@ -26,7 +26,7 @@ def preview_email(request: Request):
     base_url = str(request.base_url).rstrip("/")
     logo_url = f"{base_url}/static/logo.png"
 
-    template_path = Path("app/templates/pika_pika_weekly.html")
+    template_path = Path("app/templates/weekly_email.html")
 
     with open(template_path, "r", encoding="utf-8") as f:
         template_str = f.read()
@@ -35,13 +35,13 @@ def preview_email(request: Request):
         template_str,
         {
             "logo_url": logo_url,
-            "maps_url": "https://www.google.com/maps/place/Pika+pika/@-33.0094136,-58.5212939,17z/data=!3m1!4b1!4m6!3m5!1s0x95baa96e7a3c9b9b:0xe3dcf248c61b47ba!8m2!3d-33.0094136!4d-58.5212939!16s%2Fg%2F11s5zh8086?entry=ttu&g_ep=EgoyMDI2MDIyNS4wIKXMDSoASAFQAw%3D%3D",
-            "whatsapp_url": "https://wa.me/5493446586123",
-            "address": "Rocamora 35, Gualeguaychú, Entre Ríos",
-            "hours": "Lun a Sáb",
-            "terms_line": "Válido presentando este email en el local Pika Pika",
-            "instagram_url": "https://instagram.com/pikapikagchu",
-            "instagram_handle": "@pikapikagchu",
+            "maps_url": "https://maps.google.com/?q=Principessa+Pasteleria+Buenos+Aires",
+            "whatsapp_url": "https://wa.me/5491178933096",
+            "address": "Ciudad de Buenos Aires",
+            "hours": "Consultá horarios por Instagram",
+            "terms_line": "Válido presentando este email en la pastelería Principessa",
+            "instagram_url": "https://instagram.com/principessa.pasteleria",
+            "instagram_handle": "@principessa.pasteleria",
             "unsubscribe_url": f"{base_url}/unsubscribe?channel=email&value=test@example.com"
         }
     )
