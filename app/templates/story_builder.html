@@ -337,9 +337,15 @@
     </div>
 
     <div class="ctrl-sec" style="margin-top:15px">
-      <div class="toggle-row">
+      <div class="ctrl-label">Logo</div>
+      <div class="toggle-row" style="margin-bottom:8px">
         <span class="toggle-text">Mostrar logo</span>
         <div class="toggle-pill on" id="logoToggle"></div>
+      </div>
+      <div class="btn-group" id="logoSizeGroup">
+        <button class="grp-btn" data-logosize="sm">S</button>
+        <button class="grp-btn active" data-logosize="md">M</button>
+        <button class="grp-btn" data-logosize="lg">L</button>
       </div>
     </div>
 
@@ -361,7 +367,7 @@
 <script>
 const S = {
   photo: null, layout: 'fullbleed', color: '#E8A045',
-  showLogo: true, textSize: 'md', textAlign: 'center',
+  showLogo: true, logoSize: 'md', textSize: 'md', textAlign: 'center',
   fontStyle: 'elegant', pattern: 'none', border: 'none',
 };
 
@@ -384,6 +390,9 @@ window.addEventListener('resize', sizePreview);
 // ── helpers ──
 const SCALE = { sm: 0.78, md: 1.0, lg: 1.28 };
 const sz = n => Math.round(n * SCALE[S.textSize]);
+
+const LOGO_SCALE = { sm: 0.55, md: 1.0, lg: 1.6 };
+const lsz = n => Math.round(n * LOGO_SCALE[S.logoSize]);
 
 const FONTS = {
   elegant: { h: "'Playfair Display', serif",  hw: '900', b: "'Nunito', sans-serif"  },
@@ -433,7 +442,7 @@ function renderFullbleed(hl, sub, cta) {
   storyFrame.innerHTML = `
     <div class="story s-fb">
       ${bg}<div class="s-gradient"></div>
-      ${logoImg(`width:${sz(180)}px;position:absolute;top:88px;left:50%;transform:translateX(-50%)`)}
+      ${logoImg(`width:${lsz(180)}px;position:absolute;top:88px;left:50%;transform:translateX(-50%)`)}
       <div class="s-bottom" style="text-align:${ta()}">
         ${hl  ? `<div style="font-family:${hf()};font-weight:${hfw()};font-size:${sz(108)}px;color:#fff;line-height:1.05;margin-bottom:${sz(34)}px;text-shadow:0 4px 28px rgba(0,0,0,.35)">${esc(hl)}</div>` : ''}
         ${sub ? `<div style="font-family:${bf()};font-size:${sz(52)}px;font-weight:600;color:rgba(255,255,255,.88);line-height:1.35;margin-bottom:${sz(58)}px">${esc(sub)}</div>` : ''}
@@ -451,7 +460,7 @@ function renderSplit(hl, sub, cta) {
     <div class="story s-sp">
       <div class="s-photo-top">${photo}</div>
       <div class="s-panel" style="background:${S.color};align-items:${ai()};text-align:${ta()}">
-        ${logoImg(`width:${sz(140)}px;display:block;margin-bottom:${sz(44)}px;position:relative;z-index:1`)}
+        ${logoImg(`width:${lsz(140)}px;display:block;margin-bottom:${sz(44)}px;position:relative;z-index:1`)}
         ${hl  ? `<div style="font-family:${hf()};font-weight:${hfw()};font-size:${sz(96)}px;color:#fff;line-height:1.08;margin-bottom:${sz(26)}px;position:relative;z-index:1">${esc(hl)}</div>` : ''}
         ${sub ? `<div style="font-family:${bf()};font-size:${sz(50)}px;font-weight:600;color:rgba(255,255,255,.85);line-height:1.3;margin-bottom:${sz(44)}px;position:relative;z-index:1">${esc(sub)}</div>` : ''}
         ${cta ? `<div style="font-family:${bf()};font-size:${sz(40)}px;font-weight:700;color:rgba(255,255,255,.62);position:relative;z-index:1">${esc(cta)}</div>` : ''}
@@ -469,7 +478,7 @@ function renderCard(hl, sub, cta) {
       <div class="s-card">
         <div class="s-card-photo">${cpPhoto}</div>
         <div class="s-card-body" style="align-items:${ai()};text-align:${ta()}">
-          ${logoImg(`width:${sz(110)}px;filter:brightness(0);margin-bottom:${sz(30)}px`)}
+          ${logoImg(`width:${lsz(110)}px;filter:brightness(0);margin-bottom:${sz(30)}px`)}
           ${hl  ? `<div style="font-family:${hf()};font-weight:${hfw()};font-size:${sz(84)}px;color:#111827;line-height:1.1;margin-bottom:${sz(22)}px">${esc(hl)}</div>` : ''}
           ${sub ? `<div style="font-family:${bf()};font-size:${sz(44)}px;font-weight:600;color:#6b7280;line-height:1.35;margin-bottom:${sz(30)}px">${esc(sub)}</div>` : ''}
           ${cta ? `<div style="font-family:${bf()};font-size:${sz(36)}px;font-weight:700;color:${S.color}">${esc(cta)}</div>` : ''}
@@ -490,7 +499,7 @@ function renderQuote(hl, sub, cta) {
         ${hl  ? `<div style="font-family:${hf()};font-weight:${hfw()};font-size:${sz(112)}px;color:#fff;line-height:1.06;margin-bottom:${sz(20)}px;text-shadow:0 4px 20px rgba(0,0,0,.25)">${esc(hl)}</div>` : ''}
         <div class="s-qt-divider" style="${divAlign}"></div>
         ${sub ? `<div style="font-family:${bf()};font-size:${sz(52)}px;font-weight:600;color:rgba(255,255,255,.82);line-height:1.35;margin-bottom:${sz(60)}px">${esc(sub)}</div>` : ''}
-        ${logoImg(`width:${sz(150)}px;display:inline-block`)}
+        ${logoImg(`width:${lsz(150)}px;display:inline-block`)}
         ${cta ? `<div style="font-family:${bf()};font-size:${sz(38)}px;font-weight:700;color:rgba(255,255,255,.58);margin-top:${sz(36)}px">${esc(cta)}</div>` : ''}
       </div>
       ${patternEl()}${borderEl()}
@@ -505,7 +514,7 @@ function renderFrame(hl, sub, cta) {
     <div class="story s-fr">
       ${bg}<div class="s-overlay"></div>
       <div class="s-panel" style="align-items:${ai()};text-align:${ta()}">
-        ${logoImg(`width:${sz(110)}px;filter:brightness(0);margin-bottom:${sz(40)}px`)}
+        ${logoImg(`width:${lsz(110)}px;filter:brightness(0);margin-bottom:${sz(40)}px`)}
         ${hl  ? `<div style="font-family:${hf()};font-weight:${hfw()};font-size:${sz(88)}px;color:#111827;line-height:1.1;margin-bottom:${sz(22)}px">${esc(hl)}</div>` : ''}
         ${sub ? `<div style="font-family:${bf()};font-size:${sz(46)}px;font-weight:600;color:#4b5563;line-height:1.35;margin-bottom:${sz(32)}px">${esc(sub)}</div>` : ''}
         ${cta ? `<div style="font-family:${bf()};font-size:${sz(38)}px;font-weight:700;color:${S.color}">${esc(cta)}</div>` : ''}
@@ -521,7 +530,7 @@ function renderPoster(hl, sub, cta) {
   storyFrame.innerHTML = `
     <div class="story s-pt">
       <div class="s-pt-top" style="background:${S.color}">
-        ${logoImg(`width:${sz(160)}px`)}
+        ${logoImg(`width:${lsz(160)}px`)}
       </div>
       <div class="s-pt-photo">${photo}</div>
       <div class="s-pt-bot" style="background:#1a1a2e;text-align:${ta()};align-items:${ai()}">
@@ -592,6 +601,13 @@ document.getElementById('borderSel').addEventListener('change', e => { S.border 
 
 document.getElementById('logoToggle').addEventListener('click', function() {
   S.showLogo = !S.showLogo; this.classList.toggle('on', S.showLogo); render();
+});
+
+document.querySelectorAll('#logoSizeGroup .grp-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#logoSizeGroup .grp-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); S.logoSize = b.dataset.logosize; render();
+  });
 });
 
 ['headline','subtext','ctaText'].forEach(id => document.getElementById(id).addEventListener('input', render));
