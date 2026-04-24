@@ -128,7 +128,7 @@
     .story { width:1080px;height:1920px;position:relative;overflow:hidden; }
 
     /* fullbleed */
-    .s-fb .s-bg { position:absolute;inset:0;width:100%;height:100%;object-fit:cover; }
+    .s-fb .s-bg { position:absolute;inset:0; }
     .s-fb .s-bg-empty { position:absolute;inset:0; }
     .s-fb .s-gradient { position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.05) 32%,rgba(0,0,0,.55) 64%,rgba(0,0,0,.9) 100%); }
     .s-fb .s-top-logo { position:absolute;top:88px;left:0;right:0;display:flex;justify-content:center; }
@@ -136,30 +136,30 @@
 
     /* split */
     .s-sp .s-photo-top { position:absolute;top:0;left:0;right:0;height:57%;overflow:hidden; }
-    .s-sp .s-photo-top img { width:100%;height:100%;object-fit:cover; }
+    .s-sp .s-photo-top div { width:100%;height:100%; }
     .s-sp .s-photo-empty { width:100%;height:100%;display:flex;align-items:center;justify-content:center; }
     .s-sp .s-panel { position:absolute;bottom:0;left:0;right:0;height:45%;display:flex;flex-direction:column;justify-content:center;padding:68px 88px 88px; }
     .s-sp .s-panel::before { content:'';position:absolute;top:-52px;left:0;right:0;height:60px;border-radius:60px 60px 0 0;background:inherit; }
 
     /* card */
-    .s-cd .s-bg-blur { position:absolute;inset:-50px;width:calc(100% + 100px);height:calc(100% + 100px);object-fit:cover;filter:blur(52px) brightness(.32) saturate(1.4); }
+    .s-cd .s-bg-blur { position:absolute;inset:-50px;width:calc(100% + 100px);height:calc(100% + 100px);filter:blur(52px) brightness(.32) saturate(1.4); }
     .s-cd .s-bg-color { position:absolute;inset:0; }
     .s-cd .s-card { position:absolute;top:72px;bottom:72px;left:60px;right:60px;background:#fff;border-radius:52px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 52px 128px rgba(0,0,0,.58); }
     .s-cd .s-card-photo { flex:1.1;overflow:hidden; }
-    .s-cd .s-card-photo img { width:100%;height:100%;object-fit:cover; }
+    .s-cd .s-card-photo div { width:100%;height:100%; }
     .s-cd .s-card-photo-empty { width:100%;height:100%;display:flex;align-items:center;justify-content:center; }
     .s-cd .s-card-body { flex:0 0 auto;padding:52px 68px 68px;display:flex;flex-direction:column; }
 
     /* quote */
     .s-qt { display:flex;flex-direction:column;justify-content:center; }
-    .s-qt .s-qt-bg { position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.12; }
+    .s-qt .s-qt-bg { position:absolute;inset:0;opacity:.12; }
     .s-qt .s-qt-overlay { position:absolute;inset:0; }
     .s-qt .s-qt-content { position:relative;z-index:2;padding:100px 88px 120px;display:flex;flex-direction:column; }
     .s-qt .s-qt-mark { line-height:.8;opacity:.2;font-family:'Playfair Display',serif;font-style:italic; }
     .s-qt .s-qt-divider { height:3px;width:80px;background:rgba(255,255,255,.45);border-radius:2px;margin:36px 0; }
 
     /* frame */
-    .s-fr .s-bg { position:absolute;inset:0;width:100%;height:100%;object-fit:cover; }
+    .s-fr .s-bg { position:absolute;inset:0; }
     .s-fr .s-bg-empty { position:absolute;inset:0; }
     .s-fr .s-overlay { position:absolute;inset:0;background:rgba(0,0,0,.5); }
     .s-fr .s-panel { position:absolute;top:50%;left:68px;right:68px;transform:translateY(-50%);background:rgba(255,255,255,.96);border-radius:48px;padding:72px 80px;display:flex;flex-direction:column; }
@@ -167,7 +167,7 @@
     /* poster */
     .s-pt .s-pt-top { position:absolute;top:0;left:0;right:0;height:300px;display:flex;align-items:center;justify-content:center; }
     .s-pt .s-pt-photo { position:absolute;top:300px;left:0;right:0;height:920px;overflow:hidden; }
-    .s-pt .s-pt-photo img { width:100%;height:100%;object-fit:cover; }
+    .s-pt .s-pt-photo div { width:100%;height:100%; }
     .s-pt .s-pt-photo-empty { width:100%;height:100%;display:flex;align-items:center;justify-content:center; }
     .s-pt .s-pt-bot { position:absolute;bottom:0;left:0;right:0;height:700px;display:flex;flex-direction:column;justify-content:center;padding:72px 88px; }
   </style>
@@ -428,7 +428,7 @@ function logoImg(styleStr) {
 // ── renderers ──
 function renderFullbleed(hl, sub, cta) {
   const bg = S.photo
-    ? `<img class="s-bg" src="${S.photo}" />`
+    ? `<div class="s-bg" style="background-image:url('${S.photo}');background-size:cover;background-position:center;"></div>`
     : `<div class="s-bg s-bg-empty" style="background:linear-gradient(145deg,${S.color},${S.color}99);"></div>`;
   storyFrame.innerHTML = `
     <div class="story s-fb">
@@ -445,7 +445,7 @@ function renderFullbleed(hl, sub, cta) {
 
 function renderSplit(hl, sub, cta) {
   const photo = S.photo
-    ? `<img src="${S.photo}" />`
+    ? `<div style="width:100%;height:100%;background-image:url('${S.photo}');background-size:cover;background-position:center;"></div>`
     : `<div class="s-photo-empty" style="background:${S.color}22"><span style="font-size:72px;opacity:.2">📷</span></div>`;
   storyFrame.innerHTML = `
     <div class="story s-sp">
@@ -461,8 +461,8 @@ function renderSplit(hl, sub, cta) {
 }
 
 function renderCard(hl, sub, cta) {
-  const bgBlur  = S.photo ? `<img class="s-bg-blur" src="${S.photo}" />` : `<div class="s-bg-color" style="background:${S.color};opacity:.55;"></div>`;
-  const cpPhoto = S.photo ? `<img src="${S.photo}" />` : `<div class="s-card-photo-empty" style="background:${S.color}22"><span style="font-size:72px;opacity:.3">📷</span></div>`;
+  const bgBlur  = S.photo ? `<div class="s-bg-blur" style="background-image:url('${S.photo}');background-size:cover;background-position:center;"></div>` : `<div class="s-bg-color" style="background:${S.color};opacity:.55;"></div>`;
+  const cpPhoto = S.photo ? `<div style="width:100%;height:100%;background-image:url('${S.photo}');background-size:cover;background-position:center;"></div>` : `<div class="s-card-photo-empty" style="background:${S.color}22"><span style="font-size:72px;opacity:.3">📷</span></div>`;
   storyFrame.innerHTML = `
     <div class="story s-cd">
       ${bgBlur}
@@ -483,7 +483,7 @@ function renderQuote(hl, sub, cta) {
   const divAlign = ta() === 'right' ? 'margin:36px 0 36px auto' : ta() === 'center' ? 'margin:36px auto' : 'margin:36px 0';
   storyFrame.innerHTML = `
     <div class="story s-qt" style="background:linear-gradient(145deg,${S.color},${S.color}cc)">
-      ${S.photo ? `<img class="s-qt-bg" src="${S.photo}" />` : ''}
+      ${S.photo ? `<div class="s-qt-bg" style="background-image:url('${S.photo}');background-size:cover;background-position:center;"></div>` : ''}
       <div class="s-qt-overlay" style="background:linear-gradient(145deg,rgba(0,0,0,.18),rgba(0,0,0,.34))"></div>
       <div class="s-qt-content" style="text-align:${ta()};align-items:${ai()}">
         <div class="s-qt-mark" style="font-size:${sz(180)}px">"</div>
@@ -499,7 +499,7 @@ function renderQuote(hl, sub, cta) {
 
 function renderFrame(hl, sub, cta) {
   const bg = S.photo
-    ? `<img class="s-bg" src="${S.photo}" />`
+    ? `<div class="s-bg" style="background-image:url('${S.photo}');background-size:cover;background-position:center;"></div>`
     : `<div class="s-bg s-bg-empty" style="background:linear-gradient(145deg,${S.color},${S.color}88);"></div>`;
   storyFrame.innerHTML = `
     <div class="story s-fr">
@@ -516,7 +516,7 @@ function renderFrame(hl, sub, cta) {
 
 function renderPoster(hl, sub, cta) {
   const photo = S.photo
-    ? `<img src="${S.photo}" />`
+    ? `<div style="width:100%;height:100%;background-image:url('${S.photo}');background-size:cover;background-position:center;"></div>`
     : `<div class="s-pt-photo-empty" style="background:${S.color}22"><span style="font-size:80px;opacity:.2">📷</span></div>`;
   storyFrame.innerHTML = `
     <div class="story s-pt">
@@ -629,12 +629,17 @@ async function downloadPng() {
   btn.disabled = true; btn.textContent = '⏳ Generando...';
   try {
     await document.fonts.ready;
-    const canvas = await html2canvas(storyFrame, {
+    const offscreen = document.createElement('div');
+    offscreen.style.cssText = 'position:fixed;left:-9999px;top:0;width:1080px;height:1920px;overflow:hidden;pointer-events:none;';
+    offscreen.innerHTML = storyFrame.innerHTML;
+    document.body.appendChild(offscreen);
+    const canvas = await html2canvas(offscreen, {
       width: 1080, height: 1920, scale: 1,
       useCORS: true, allowTaint: false, backgroundColor: null, logging: false,
     });
+    document.body.removeChild(offscreen);
     const a = document.createElement('a');
-    a.download = `pika-story-${Date.now()}.png`;
+    a.download = `principessa-story-${Date.now()}.png`;
     a.href = canvas.toDataURL('image/png');
     a.click();
   } catch (err) {
