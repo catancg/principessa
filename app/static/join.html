@@ -20,15 +20,6 @@
     input:focus, select:focus { outline: none; border-color: #6B3217; }
     button { background: #6B3217; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: opacity .15s; }
     button:hover { opacity: .88; }
-    .section-title { margin-top: 20px; font-weight: 900; font-size: 14px; color: #6B3217; text-transform: uppercase; letter-spacing: 0.5px; }
-    .checks { margin-top: 8px; }
-    .check-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 12px; margin-top: 8px;
-      border: 1px solid #E8D5C4; border-radius: 10px; background: #fff;
-    }
-    .check-row input { width: auto; margin: 0; padding: 0; border: none; }
-    .muted { color: #7A5840; font-size: 13px; margin-top: 8px; }
     #msg { text-align: center; margin-top: 16px; font-weight: 700; color: #6B3217; }
   </style>
 </head>
@@ -40,36 +31,6 @@
   <form id="form">
     <input placeholder="Tu nombre" name="name" required />
     <input placeholder="Tu email (ejemplo@gmail.com)" name="email" type="email" required />
-
-    <div class="section-title">¿Qué te gusta más?</div>
-    <div class="checks">
-      <label class="check-row">
-        <input type="checkbox" name="interests" value="torta_ricota" />
-        Torta de ricota
-      </label>
-      <label class="check-row">
-        <input type="checkbox" name="interests" value="cheesecake" />
-        Cheesecake
-      </label>
-      <label class="check-row">
-        <input type="checkbox" name="interests" value="torta_matilda" />
-        Torta Matilda
-      </label>
-      <label class="check-row">
-        <input type="checkbox" name="interests" value="carrot_cake" />
-        Carrot cake
-      </label>
-      <label class="check-row">
-        <input type="checkbox" name="interests" value="ricota_dulce_leche" />
-        Torta de ricota con dulce de leche
-      </label>
-      <label class="check-row">
-        <input type="checkbox" name="interests" value="torta_balcarce" />
-        Torta Balcarce
-      </label>
-    </div>
-
-    <p class="muted">Podés elegir más de una opción.</p>
 
     <button type="submit" style="margin-top: 20px;">Quiero recibir novedades</button>
   </form>

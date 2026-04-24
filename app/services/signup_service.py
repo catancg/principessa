@@ -3,7 +3,7 @@ from sqlalchemy import text
 from datetime import datetime, timezone
 
 from app.schemas.signup import SignupIn
-ALLOWED_INTERESTS = {"baby_items", "toys", "cochesitos", "cunas"}
+ALLOWED_INTERESTS = {"torta_ricota", "cheesecake", "torta_matilda", "carrot_cake", "ricota_dulce_leche", "torta_balcarce"}
 
 
 def create_signup(db: Session, data) -> tuple[str, str]:
@@ -12,11 +12,9 @@ def create_signup(db: Session, data) -> tuple[str, str]:
       - customer row
       - email identity row (channel=email)
       - consent granted for promotions (no repeated 'granted' spam)
-      - customer_interests rows
     """
     name = data.name.strip()
     email = data.email.strip().lower()
-    interests = [i for i in (data.interests or []) if i in ALLOWED_INTERESTS]
 
     # 0) start tx
     # (If you're already wrapping commit/rollback outside, keep consistent.)
@@ -61,7 +59,6 @@ def create_signup(db: Session, data) -> tuple[str, str]:
         ).scalar_one()
 
         # 3) Create email identity
-        print ("About to insert:", customer_id, email)
         identity_id = db.execute(
             text("""
                 insert into customer_identities (customer_id, channel, value, is_primary)
@@ -107,18 +104,5 @@ def create_signup(db: Session, data) -> tuple[str, str]:
             """),
             {"customer_id": customer_id},
         )
-
-    # 5) Interests: upsert rows into customer_interests
-    # (One email/week strategy: we store interests, scheduler will use them in payload.)
-    if interests:
-        for k in interests:
-            db.execute(
-                text("""
-                    insert into customer_interests (customer_id, interest_key)
-                    values (:customer_id, :interest_key)
-                    on conflict (customer_id, interest_key) do nothing
-                """),
-                {"customer_id": customer_id, "interest_key": k},
-            )
 
     return customer_id, identity_id
