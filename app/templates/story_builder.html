@@ -128,7 +128,7 @@
     .story { width:1080px;height:1920px;position:relative;overflow:hidden; }
 
     /* fullbleed */
-    .s-fb .s-bg { position:absolute;inset:0;width:100%;height:100%;object-fit:cover; }
+    .s-fb .s-bg { position:absolute;inset:0; }
     .s-fb .s-bg-empty { position:absolute;inset:0; }
     .s-fb .s-gradient { position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.05) 32%,rgba(0,0,0,.55) 64%,rgba(0,0,0,.9) 100%); }
     .s-fb .s-top-logo { position:absolute;top:88px;left:0;right:0;display:flex;justify-content:center; }
@@ -136,30 +136,30 @@
 
     /* split */
     .s-sp .s-photo-top { position:absolute;top:0;left:0;right:0;height:57%;overflow:hidden; }
-    .s-sp .s-photo-top img { width:100%;height:100%;object-fit:cover; }
+    .s-sp .s-photo-top div { width:100%;height:100%; }
     .s-sp .s-photo-empty { width:100%;height:100%;display:flex;align-items:center;justify-content:center; }
     .s-sp .s-panel { position:absolute;bottom:0;left:0;right:0;height:45%;display:flex;flex-direction:column;justify-content:center;padding:68px 88px 88px; }
     .s-sp .s-panel::before { content:'';position:absolute;top:-52px;left:0;right:0;height:60px;border-radius:60px 60px 0 0;background:inherit; }
 
     /* card */
-    .s-cd .s-bg-blur { position:absolute;inset:-50px;width:calc(100% + 100px);height:calc(100% + 100px);object-fit:cover;filter:blur(52px) brightness(.32) saturate(1.4); }
+    .s-cd .s-bg-blur { position:absolute;inset:-50px;width:calc(100% + 100px);height:calc(100% + 100px);filter:blur(52px) brightness(.32) saturate(1.4); }
     .s-cd .s-bg-color { position:absolute;inset:0; }
     .s-cd .s-card { position:absolute;top:72px;bottom:72px;left:60px;right:60px;background:#fff;border-radius:52px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 52px 128px rgba(0,0,0,.58); }
     .s-cd .s-card-photo { flex:1.1;overflow:hidden; }
-    .s-cd .s-card-photo img { width:100%;height:100%;object-fit:cover; }
+    .s-cd .s-card-photo div { width:100%;height:100%; }
     .s-cd .s-card-photo-empty { width:100%;height:100%;display:flex;align-items:center;justify-content:center; }
     .s-cd .s-card-body { flex:0 0 auto;padding:52px 68px 68px;display:flex;flex-direction:column; }
 
     /* quote */
     .s-qt { display:flex;flex-direction:column;justify-content:center; }
-    .s-qt .s-qt-bg { position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.12; }
+    .s-qt .s-qt-bg { position:absolute;inset:0;opacity:.12; }
     .s-qt .s-qt-overlay { position:absolute;inset:0; }
     .s-qt .s-qt-content { position:relative;z-index:2;padding:100px 88px 120px;display:flex;flex-direction:column; }
     .s-qt .s-qt-mark { line-height:.8;opacity:.2;font-family:'Playfair Display',serif;font-style:italic; }
     .s-qt .s-qt-divider { height:3px;width:80px;background:rgba(255,255,255,.45);border-radius:2px;margin:36px 0; }
 
     /* frame */
-    .s-fr .s-bg { position:absolute;inset:0;width:100%;height:100%;object-fit:cover; }
+    .s-fr .s-bg { position:absolute;inset:0; }
     .s-fr .s-bg-empty { position:absolute;inset:0; }
     .s-fr .s-overlay { position:absolute;inset:0;background:rgba(0,0,0,.5); }
     .s-fr .s-panel { position:absolute;top:50%;left:68px;right:68px;transform:translateY(-50%);background:rgba(255,255,255,.96);border-radius:48px;padding:72px 80px;display:flex;flex-direction:column; }
@@ -167,7 +167,7 @@
     /* poster */
     .s-pt .s-pt-top { position:absolute;top:0;left:0;right:0;height:300px;display:flex;align-items:center;justify-content:center; }
     .s-pt .s-pt-photo { position:absolute;top:300px;left:0;right:0;height:920px;overflow:hidden; }
-    .s-pt .s-pt-photo img { width:100%;height:100%;object-fit:cover; }
+    .s-pt .s-pt-photo div { width:100%;height:100%; }
     .s-pt .s-pt-photo-empty { width:100%;height:100%;display:flex;align-items:center;justify-content:center; }
     .s-pt .s-pt-bot { position:absolute;bottom:0;left:0;right:0;height:700px;display:flex;flex-direction:column;justify-content:center;padding:72px 88px; }
   </style>
@@ -337,9 +337,15 @@
     </div>
 
     <div class="ctrl-sec" style="margin-top:15px">
-      <div class="toggle-row">
+      <div class="ctrl-label">Logo</div>
+      <div class="toggle-row" style="margin-bottom:8px">
         <span class="toggle-text">Mostrar logo</span>
         <div class="toggle-pill on" id="logoToggle"></div>
+      </div>
+      <div class="btn-group" id="logoSizeGroup">
+        <button class="grp-btn" data-logosize="sm">S</button>
+        <button class="grp-btn active" data-logosize="md">M</button>
+        <button class="grp-btn" data-logosize="lg">L</button>
       </div>
     </div>
 
@@ -361,7 +367,7 @@
 <script>
 const S = {
   photo: null, layout: 'fullbleed', color: '#E8A045',
-  showLogo: true, textSize: 'md', textAlign: 'center',
+  showLogo: true, logoSize: 'md', textSize: 'md', textAlign: 'center',
   fontStyle: 'elegant', pattern: 'none', border: 'none',
 };
 
@@ -384,6 +390,9 @@ window.addEventListener('resize', sizePreview);
 // ── helpers ──
 const SCALE = { sm: 0.78, md: 1.0, lg: 1.28 };
 const sz = n => Math.round(n * SCALE[S.textSize]);
+
+const LOGO_SCALE = { sm: 0.55, md: 1.0, lg: 1.6 };
+const lsz = n => Math.round(n * LOGO_SCALE[S.logoSize]);
 
 const FONTS = {
   elegant: { h: "'Playfair Display', serif",  hw: '900', b: "'Nunito', sans-serif"  },
@@ -428,12 +437,12 @@ function logoImg(styleStr) {
 // ── renderers ──
 function renderFullbleed(hl, sub, cta) {
   const bg = S.photo
-    ? `<img class="s-bg" src="${S.photo}" />`
+    ? `<div class="s-bg" style="background-image:url('${S.photo}');background-size:cover;background-position:center;"></div>`
     : `<div class="s-bg s-bg-empty" style="background:linear-gradient(145deg,${S.color},${S.color}99);"></div>`;
   storyFrame.innerHTML = `
     <div class="story s-fb">
       ${bg}<div class="s-gradient"></div>
-      ${logoImg(`width:${sz(180)}px;position:absolute;top:88px;left:50%;transform:translateX(-50%)`)}
+      ${logoImg(`width:${lsz(180)}px;position:absolute;top:88px;left:50%;transform:translateX(-50%)`)}
       <div class="s-bottom" style="text-align:${ta()}">
         ${hl  ? `<div style="font-family:${hf()};font-weight:${hfw()};font-size:${sz(108)}px;color:#fff;line-height:1.05;margin-bottom:${sz(34)}px;text-shadow:0 4px 28px rgba(0,0,0,.35)">${esc(hl)}</div>` : ''}
         ${sub ? `<div style="font-family:${bf()};font-size:${sz(52)}px;font-weight:600;color:rgba(255,255,255,.88);line-height:1.35;margin-bottom:${sz(58)}px">${esc(sub)}</div>` : ''}
@@ -445,13 +454,13 @@ function renderFullbleed(hl, sub, cta) {
 
 function renderSplit(hl, sub, cta) {
   const photo = S.photo
-    ? `<img src="${S.photo}" />`
+    ? `<div style="width:100%;height:100%;background-image:url('${S.photo}');background-size:cover;background-position:center;"></div>`
     : `<div class="s-photo-empty" style="background:${S.color}22"><span style="font-size:72px;opacity:.2">📷</span></div>`;
   storyFrame.innerHTML = `
     <div class="story s-sp">
       <div class="s-photo-top">${photo}</div>
       <div class="s-panel" style="background:${S.color};align-items:${ai()};text-align:${ta()}">
-        ${logoImg(`width:${sz(140)}px;display:block;margin-bottom:${sz(44)}px;position:relative;z-index:1`)}
+        ${logoImg(`width:${lsz(140)}px;display:block;margin-bottom:${sz(44)}px;position:relative;z-index:1`)}
         ${hl  ? `<div style="font-family:${hf()};font-weight:${hfw()};font-size:${sz(96)}px;color:#fff;line-height:1.08;margin-bottom:${sz(26)}px;position:relative;z-index:1">${esc(hl)}</div>` : ''}
         ${sub ? `<div style="font-family:${bf()};font-size:${sz(50)}px;font-weight:600;color:rgba(255,255,255,.85);line-height:1.3;margin-bottom:${sz(44)}px;position:relative;z-index:1">${esc(sub)}</div>` : ''}
         ${cta ? `<div style="font-family:${bf()};font-size:${sz(40)}px;font-weight:700;color:rgba(255,255,255,.62);position:relative;z-index:1">${esc(cta)}</div>` : ''}
@@ -461,15 +470,15 @@ function renderSplit(hl, sub, cta) {
 }
 
 function renderCard(hl, sub, cta) {
-  const bgBlur  = S.photo ? `<img class="s-bg-blur" src="${S.photo}" />` : `<div class="s-bg-color" style="background:${S.color};opacity:.55;"></div>`;
-  const cpPhoto = S.photo ? `<img src="${S.photo}" />` : `<div class="s-card-photo-empty" style="background:${S.color}22"><span style="font-size:72px;opacity:.3">📷</span></div>`;
+  const bgBlur  = S.photo ? `<div class="s-bg-blur" style="background-image:url('${S.photo}');background-size:cover;background-position:center;"></div>` : `<div class="s-bg-color" style="background:${S.color};opacity:.55;"></div>`;
+  const cpPhoto = S.photo ? `<div style="width:100%;height:100%;background-image:url('${S.photo}');background-size:cover;background-position:center;"></div>` : `<div class="s-card-photo-empty" style="background:${S.color}22"><span style="font-size:72px;opacity:.3">📷</span></div>`;
   storyFrame.innerHTML = `
     <div class="story s-cd">
       ${bgBlur}
       <div class="s-card">
         <div class="s-card-photo">${cpPhoto}</div>
         <div class="s-card-body" style="align-items:${ai()};text-align:${ta()}">
-          ${logoImg(`width:${sz(110)}px;filter:brightness(0);margin-bottom:${sz(30)}px`)}
+          ${logoImg(`width:${lsz(110)}px;filter:brightness(0);margin-bottom:${sz(30)}px`)}
           ${hl  ? `<div style="font-family:${hf()};font-weight:${hfw()};font-size:${sz(84)}px;color:#111827;line-height:1.1;margin-bottom:${sz(22)}px">${esc(hl)}</div>` : ''}
           ${sub ? `<div style="font-family:${bf()};font-size:${sz(44)}px;font-weight:600;color:#6b7280;line-height:1.35;margin-bottom:${sz(30)}px">${esc(sub)}</div>` : ''}
           ${cta ? `<div style="font-family:${bf()};font-size:${sz(36)}px;font-weight:700;color:${S.color}">${esc(cta)}</div>` : ''}
@@ -483,14 +492,14 @@ function renderQuote(hl, sub, cta) {
   const divAlign = ta() === 'right' ? 'margin:36px 0 36px auto' : ta() === 'center' ? 'margin:36px auto' : 'margin:36px 0';
   storyFrame.innerHTML = `
     <div class="story s-qt" style="background:linear-gradient(145deg,${S.color},${S.color}cc)">
-      ${S.photo ? `<img class="s-qt-bg" src="${S.photo}" />` : ''}
+      ${S.photo ? `<div class="s-qt-bg" style="background-image:url('${S.photo}');background-size:cover;background-position:center;"></div>` : ''}
       <div class="s-qt-overlay" style="background:linear-gradient(145deg,rgba(0,0,0,.18),rgba(0,0,0,.34))"></div>
       <div class="s-qt-content" style="text-align:${ta()};align-items:${ai()}">
         <div class="s-qt-mark" style="font-size:${sz(180)}px">"</div>
         ${hl  ? `<div style="font-family:${hf()};font-weight:${hfw()};font-size:${sz(112)}px;color:#fff;line-height:1.06;margin-bottom:${sz(20)}px;text-shadow:0 4px 20px rgba(0,0,0,.25)">${esc(hl)}</div>` : ''}
         <div class="s-qt-divider" style="${divAlign}"></div>
         ${sub ? `<div style="font-family:${bf()};font-size:${sz(52)}px;font-weight:600;color:rgba(255,255,255,.82);line-height:1.35;margin-bottom:${sz(60)}px">${esc(sub)}</div>` : ''}
-        ${logoImg(`width:${sz(150)}px;display:inline-block`)}
+        ${logoImg(`width:${lsz(150)}px;display:inline-block`)}
         ${cta ? `<div style="font-family:${bf()};font-size:${sz(38)}px;font-weight:700;color:rgba(255,255,255,.58);margin-top:${sz(36)}px">${esc(cta)}</div>` : ''}
       </div>
       ${patternEl()}${borderEl()}
@@ -499,13 +508,13 @@ function renderQuote(hl, sub, cta) {
 
 function renderFrame(hl, sub, cta) {
   const bg = S.photo
-    ? `<img class="s-bg" src="${S.photo}" />`
+    ? `<div class="s-bg" style="background-image:url('${S.photo}');background-size:cover;background-position:center;"></div>`
     : `<div class="s-bg s-bg-empty" style="background:linear-gradient(145deg,${S.color},${S.color}88);"></div>`;
   storyFrame.innerHTML = `
     <div class="story s-fr">
       ${bg}<div class="s-overlay"></div>
       <div class="s-panel" style="align-items:${ai()};text-align:${ta()}">
-        ${logoImg(`width:${sz(110)}px;filter:brightness(0);margin-bottom:${sz(40)}px`)}
+        ${logoImg(`width:${lsz(110)}px;filter:brightness(0);margin-bottom:${sz(40)}px`)}
         ${hl  ? `<div style="font-family:${hf()};font-weight:${hfw()};font-size:${sz(88)}px;color:#111827;line-height:1.1;margin-bottom:${sz(22)}px">${esc(hl)}</div>` : ''}
         ${sub ? `<div style="font-family:${bf()};font-size:${sz(46)}px;font-weight:600;color:#4b5563;line-height:1.35;margin-bottom:${sz(32)}px">${esc(sub)}</div>` : ''}
         ${cta ? `<div style="font-family:${bf()};font-size:${sz(38)}px;font-weight:700;color:${S.color}">${esc(cta)}</div>` : ''}
@@ -516,12 +525,12 @@ function renderFrame(hl, sub, cta) {
 
 function renderPoster(hl, sub, cta) {
   const photo = S.photo
-    ? `<img src="${S.photo}" />`
+    ? `<div style="width:100%;height:100%;background-image:url('${S.photo}');background-size:cover;background-position:center;"></div>`
     : `<div class="s-pt-photo-empty" style="background:${S.color}22"><span style="font-size:80px;opacity:.2">📷</span></div>`;
   storyFrame.innerHTML = `
     <div class="story s-pt">
       <div class="s-pt-top" style="background:${S.color}">
-        ${logoImg(`width:${sz(160)}px`)}
+        ${logoImg(`width:${lsz(160)}px`)}
       </div>
       <div class="s-pt-photo">${photo}</div>
       <div class="s-pt-bot" style="background:#1a1a2e;text-align:${ta()};align-items:${ai()}">
@@ -594,6 +603,13 @@ document.getElementById('logoToggle').addEventListener('click', function() {
   S.showLogo = !S.showLogo; this.classList.toggle('on', S.showLogo); render();
 });
 
+document.querySelectorAll('#logoSizeGroup .grp-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#logoSizeGroup .grp-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); S.logoSize = b.dataset.logosize; render();
+  });
+});
+
 ['headline','subtext','ctaText'].forEach(id => document.getElementById(id).addEventListener('input', render));
 
 // ── photo ──
@@ -629,12 +645,17 @@ async function downloadPng() {
   btn.disabled = true; btn.textContent = '⏳ Generando...';
   try {
     await document.fonts.ready;
-    const canvas = await html2canvas(storyFrame, {
+    const offscreen = document.createElement('div');
+    offscreen.style.cssText = 'position:fixed;left:-9999px;top:0;width:1080px;height:1920px;overflow:hidden;pointer-events:none;';
+    offscreen.innerHTML = storyFrame.innerHTML;
+    document.body.appendChild(offscreen);
+    const canvas = await html2canvas(offscreen, {
       width: 1080, height: 1920, scale: 1,
       useCORS: true, allowTaint: false, backgroundColor: null, logging: false,
     });
+    document.body.removeChild(offscreen);
     const a = document.createElement('a');
-    a.download = `pika-story-${Date.now()}.png`;
+    a.download = `principessa-story-${Date.now()}.png`;
     a.href = canvas.toDataURL('image/png');
     a.click();
   } catch (err) {
