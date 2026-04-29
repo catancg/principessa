@@ -6,7 +6,7 @@ from app.schemas.signup import SignupIn
 ALLOWED_INTERESTS = {"torta_ricota", "cheesecake", "torta_matilda", "carrot_cake", "ricota_dulce_leche", "torta_balcarce"}
 
 
-def create_signup(db: Session, data) -> tuple[str, str]:
+def create_signup(db: Session, data) -> tuple[str, str, bool]:
     """
     Creates/ensures:
       - customer row
@@ -35,10 +35,10 @@ def create_signup(db: Session, data) -> tuple[str, str]:
     ).first()
 
     if row:
+        is_new_customer = False
         customer_id = row.customer_id
         identity_id = row.identity_id
 
-        # Optional: update customer's name if it was a placeholder before
         db.execute(
             text("""
                 update customers
@@ -48,6 +48,7 @@ def create_signup(db: Session, data) -> tuple[str, str]:
             {"name": name, "customer_id": customer_id},
         )
     else:
+        is_new_customer = True
         # 2) Create customer
         customer_id = db.execute(
             text("""
@@ -105,4 +106,4 @@ def create_signup(db: Session, data) -> tuple[str, str]:
             {"customer_id": customer_id},
         )
 
-    return customer_id, identity_id
+    return customer_id, identity_id, is_new_customer

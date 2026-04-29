@@ -1,27 +1,31 @@
-from fastapi import APIRouter, Depends, HTTPException
+import logging
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
+
+from app.core.limiter import limiter
 from app.db.session import get_db
 from app.schemas.signup import SignupRequest, validate_mx
 from app.services.signup_service import create_signup
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(tags=["signup"])
 
-#@router.post("/signup")
-#def signup(payload: SignupRequest, db: Session = Depends(get_db)):
-#    customer_id, identity_id = create_signup(db, payload)
-#    return {"ok": True, "customer_id": str(customer_id), "identity_id": str(identity_id)}
-#
-#from fastapi import HTTPException
-#from sqlalchemy import text
 
 @router.post("/signup")
-def signup(payload: SignupRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def signup(request: Request, payload: SignupRequest, db: Session = Depends(get_db)):
     try:
         validate_mx(payload.email)
-        customer_id, identity_id = create_signup(db, payload)
+        customer_id, identity_id, is_new = create_signup(db, payload)
         db.commit()
+        if not is_new:
+            raise HTTPException(status_code=409, detail="already_registered")
         return {"ok": True, "customer_id": str(customer_id), "identity_id": str(identity_id)}
-    except Exception as e:
+    except HTTPException:
+        raise
+    except Exception:
         db.rollback()
-        print("SIGNUP ERROR:", repr(e))
-        raise HTTPException(status_code=500, detail=f"signup failed: {repr(e)}")
+        logger.error("Signup failed", exc_info=True)
+        raise HTTPException(status_code=500, detail="Signup failed, please try again")

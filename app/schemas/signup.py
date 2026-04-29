@@ -26,5 +26,7 @@ def validate_mx(email: str):
     domain = email.split("@")[1]
     try:
         dns.resolver.resolve(domain, "MX")
-    except Exception:
+    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
         raise HTTPException(status_code=400, detail="Email domain not valid")
+    except Exception:
+        pass  # fail open on transient DNS timeouts / network errors

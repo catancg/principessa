@@ -35,33 +35,49 @@
     <button type="submit" style="margin-top: 20px;">Quiero recibir novedades</button>
   </form>
 
-  <p id="msg"></p>
+  <div id="done" style="display:none; text-align:center; padding: 12px 0;">
+    <h2 id="done-heading" style="font-size:20px;font-weight:900;color:#6B3217;margin-bottom:10px;"></h2>
+    <p id="done-body" style="color:#7A5840;font-size:14px;"></p>
+  </div>
+
+  <p id="msg" style="text-align:center;margin-top:16px;font-weight:700;color:#6B3217;"></p>
 
   <script>
     const form = document.getElementById("form");
-    const msg = document.getElementById("msg");
+    const done = document.getElementById("done");
+    const msg  = document.getElementById("msg");
+
+    function lockWithMessage(heading, body) {
+      form.style.display = "none";
+      document.getElementById("done-heading").textContent = heading;
+      document.getElementById("done-body").textContent   = body;
+      done.style.display = "";
+    }
 
     form.onsubmit = async (e) => {
       e.preventDefault();
-
-      const fd = new FormData(form);
-      const name = (fd.get("name") || "").toString().trim();
+      const fd    = new FormData(form);
+      const name  = (fd.get("name")  || "").toString().trim();
       const email = (fd.get("email") || "").toString().trim();
-      const interests = fd.getAll("interests").map(v => v.toString());
-
-      const payload = { name, email, interests, consent_promotions: true };
 
       const res = await fetch("/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ name, email, interests: [], consent_promotions: true })
       });
 
       if (res.ok) {
-        msg.innerText = "¡Bienvenida a Principessa! Pronto vas a recibir nuestras novedades.";
-        form.reset();
+        lockWithMessage(
+          "¡Gracias por unirte a nuestra comunidad! 🎁",
+          "Ahora vas a recibir nuestras novedades y sorpresas dulces."
+        );
+      } else if (res.status === 409) {
+        lockWithMessage(
+          "¡Ya estás suscripto/a a nuestra comunidad! 💛",
+          ""
+        );
       } else {
-        msg.innerText = `Ocurrió un error. Probá nuevamente. (${res.status})`;
+        msg.textContent = `Ocurrió un error. Probá nuevamente. (${res.status})`;
       }
     };
   </script>
