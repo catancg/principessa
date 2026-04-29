@@ -2,7 +2,11 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
+from app.core.limiter import limiter
 from app.db.session import engine
 from app.models.base import Base
 
@@ -22,6 +26,9 @@ from app.routers.story_builder import router as story_builder_router
 Base.metadata.create_all(bind=engine, checkfirst=True)
 
 app = FastAPI(title="Principessa Pastelería — API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 app.include_router(health_router)
 app.include_router(signup_router)
