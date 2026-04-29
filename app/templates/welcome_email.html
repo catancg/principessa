@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>¡Bienvenida a Principessa!</title>
+</head>
+<body style="margin:0;padding:0;background:#FBF4EE;font-family:Arial,Helvetica,sans-serif;">
+<div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;">
+
+  <!-- Top bar -->
+  <div style="height:6px;background:linear-gradient(90deg,#C8956A,#E8A045,#6B3217,#8B5E3C,#C8956A);"></div>
+
+  <!-- Logo -->
+  <div style="text-align:center;padding:36px 40px 24px;">
+    <img src="{{ logo_url }}" alt="Principessa Pastelería" style="max-width:160px;height:auto;" />
+  </div>
+
+  <!-- Greeting -->
+  <div style="padding:0 40px 32px;text-align:center;">
+    <h1 style="font-size:30px;color:#6B3217;margin:0 0 10px;font-weight:900;line-height:1.15;">
+      Hola {{ name }},
+    </h1>
+    <p style="font-size:17px;color:#8B5E3C;margin:0;font-weight:600;line-height:1.4;">
+      ¡Te damos la bienvenida a Principessa Pastelería!
+    </p>
+    <p style="font-size:15px;color:#7A5840;margin:14px 0 0;line-height:1.6;">
+      Nos alegra mucho que estés acá. A partir de ahora vas a ser la primera en enterarte de todo lo que preparamos.
+    </p>
+  </div>
+
+  <!-- What to expect -->
+  <div style="margin:0 32px 36px;background:#FBF4EE;border-radius:16px;padding:28px 32px;">
+    <p style="font-size:13px;color:#6B3217;font-weight:800;text-transform:uppercase;letter-spacing:0.09em;margin:0 0 20px;">
+      ¿Qué vas a recibir?
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="font-size:22px;padding-right:14px;vertical-align:top;padding-bottom:16px;">🎁</td>
+        <td style="font-size:15px;color:#3D1F0F;line-height:1.55;padding-bottom:16px;">
+          <strong>Descuentos y promos exclusivas</strong> solo para suscriptores
+        </td>
+      </tr>
+      <tr>
+        <td style="font-size:22px;padding-right:14px;vertical-align:top;padding-bottom:16px;">🍰</td>
+        <td style="font-size:15px;color:#3D1F0F;line-height:1.55;padding-bottom:16px;">
+          <strong>Novedades de temporada</strong> y nuevos productos antes que nadie
+        </td>
+      </tr>
+      <tr>
+        <td style="font-size:22px;padding-right:14px;vertical-align:top;">✨</td>
+        <td style="font-size:15px;color:#3D1F0F;line-height:1.55;">
+          <strong>Sorpresas dulces</strong> y ofertas especiales en fechas importantes
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- CTA buttons -->
+  <div style="text-align:center;padding:0 40px 40px;">
+    <a href="{{ whatsapp_url }}"
+       style="display:inline-block;background:#25D366;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;border-radius:100px;padding:14px 30px;margin:5px;">
+      💬 Escribinos por WhatsApp
+    </a>
+    <br />
+    <a href="{{ instagram_url }}"
+       style="display:inline-block;background:linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;border-radius:100px;padding:14px 30px;margin:5px;">
+      📸 Seguinos en {{ instagram_handle }}
+    </a>
+  </div>
+
+  <!-- Divider -->
+  <div style="height:1px;background:#E8D5C4;margin:0 40px;"></div>
+
+  <!-- Footer -->
+  <div style="padding:24px 40px;text-align:center;">
+    <p style="font-size:12px;color:#A08060;margin:0 0 6px;">
+      Principessa Pastelería — Ciudad de Buenos Aires
+    </p>
+    <p style="font-size:11px;color:#B89880;margin:0;">
+      Recibís este email porque te suscribiste en nuestro sitio. ·
+      <a href="{{ unsubscribe_url }}" style="color:#B89880;text-decoration:underline;">Darte de baja</a>
+    </p>
+  </div>
+
+  <!-- Bottom bar -->
+  <div style="height:6px;background:linear-gradient(90deg,#C8956A,#E8A045,#6B3217,#8B5E3C,#C8956A);"></div>
+
+</div>
+</body>
+</html>
