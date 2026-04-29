@@ -29,13 +29,13 @@ jinja_env = Environment(
     autoescape=select_autoescape(["html", "xml"]),
 )
 
-MAPS_URL = "https://www.google.com/maps/place/Pika+pika/@-33.0094136,-58.5212939,17z/data=!3m1!4b1!4m6!3m5!1s0x95baa96e7a3c9b9b:0xe3dcf248c61b47ba!8m2!3d-33.0094136!4d-58.5212939!16s%2Fg%2F11s5zh8086?entry=ttu&g_ep=EgoyMDI2MDIyNS4wIKXMDSoASAFQAw%3D%3D"
-WHATSAPP_URL = "https://wa.me/5493446586123"
-INSTAGRAM_URL = "https://instagram.com/pikapikagchu"
-INSTAGRAM_HANDLE = "@pikapikagchu"
-ADDRESS = "Rocamora 35, Gualeguaychu, Entre Rios"
-HOURS = "Lunes a Sabado"
-TERMS_LINE = "Válido presentando este email en el local Pika Pika"
+MAPS_URL = "https://maps.google.com/?q=Principessa+Pasteleria+Buenos+Aires"
+WHATSAPP_URL = "https://wa.me/5491178933096"
+INSTAGRAM_URL = "https://instagram.com/principessa.pasteleria"
+INSTAGRAM_HANDLE = "@principessa.pasteleria"
+ADDRESS = "Ciudad de Buenos Aires"
+HOURS = "Consultá horarios por Instagram"
+TERMS_LINE = "Válido presentando este email en la pastelería Principessa"
 
 
 def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
@@ -43,18 +43,44 @@ def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
     base_url = BASE_URL.rstrip("/")
     unsubscribe_url = f"{base_url}/unsubscribe?channel=email&value={email}"
 
+    if template_key == "welcome_v1":
+        name = payload.get("name", "")
+        logo_url = f"{base_url}/static/logo.png"
+        subject = f"¡Te damos la bienvenida a Principessa, {name}! 🎂"
+        text_body = (
+            f"Hola {name}!\n\n"
+            "¡Gracias por unirte a Principessa Pastelería!\n\n"
+            "¿Qué vas a recibir?\n"
+            "- Descuentos y promos exclusivas solo para suscriptores\n"
+            "- Novedades de temporada y nuevos productos antes que nadie\n"
+            "- Sorpresas dulces y ofertas especiales en fechas importantes\n\n"
+            f"WhatsApp: {WHATSAPP_URL}\n"
+            f"Instagram: {INSTAGRAM_URL}\n\n"
+            f"Para darte de baja:\n{unsubscribe_url}\n"
+        )
+        template = jinja_env.get_template("welcome_email.html")
+        html_body = template.render(
+            name=name,
+            logo_url=logo_url,
+            whatsapp_url=WHATSAPP_URL,
+            instagram_url=INSTAGRAM_URL,
+            instagram_handle=INSTAGRAM_HANDLE,
+            unsubscribe_url=unsubscribe_url,
+        )
+        return subject, text_body, html_body
+
     if template_key == "weekly_promo_v1":
         logo_url = f"{base_url}/static/logo.png"
-        subject = "Beneficios exclusivos para vos en Pika Pika"
+        subject = "Beneficios exclusivos para vos en Principessa"
         text_body = (
             "Hola!\n\n"
-            "Queremos invitarte a nuestro local. Presentando este email tenes un descuento especial.\n\n"
+            "Queremos invitarte a nuestra pastelería. Presentando este email tenés un descuento especial.\n\n"
             f"Ubicacion: {MAPS_URL}\n"
             f"WhatsApp: {WHATSAPP_URL}\n"
             f"Instagram: {INSTAGRAM_URL}\n\n"
             f"Darte de baja:\n{unsubscribe_url}\n"
         )
-        template = jinja_env.get_template("pika_pika_weekly.html")
+        template = jinja_env.get_template("weekly_email.html")
         html_body = template.render(
             logo_url=logo_url,
             maps_url=MAPS_URL,
@@ -69,7 +95,7 @@ def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
         return subject, text_body, html_body
 
     if template_key == "ai_variant_v1":
-        subject = payload.get("subject_line", "Novedades de Pika Pika")
+        subject = payload.get("subject_line", "Novedades de Principessa")
         headline = payload.get("headline", "")
         highlight_phrase = payload.get("highlight_phrase", "descuento especial")
         body_intro = payload.get("body_intro", "")

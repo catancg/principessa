@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from datetime import datetime, timezone
@@ -104,6 +106,23 @@ def create_signup(db: Session, data) -> tuple[str, str, bool]:
                 ) != 'granted'
             """),
             {"customer_id": customer_id},
+        )
+
+    if is_new_customer:
+        db.execute(
+            text("""
+                insert into message_outbox
+                    (customer_id, to_identity_id, channel, template_key, scheduled_for, payload, status)
+                values
+                    (:customer_id, :identity_id, 'email'::channel_type, 'welcome_v1', now(),
+                     CAST(:payload AS jsonb), 'queued')
+                on conflict do nothing
+            """),
+            {
+                "customer_id": customer_id,
+                "identity_id": identity_id,
+                "payload": json.dumps({"name": name}),
+            },
         )
 
     return customer_id, identity_id, is_new_customer
