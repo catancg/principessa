@@ -9,74 +9,114 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Nunito', Arial, sans-serif; background: #f3f4f6; color: #333; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-    /* ── top bar ── */
+    /* top bar */
     .topbar {
-      background: #fff;
-      border-bottom: 1px solid #e5e7eb;
-      padding: 12px 24px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-shrink: 0;
-      z-index: 10;
+      background: #fff; border-bottom: 1px solid #e5e7eb;
+      padding: 10px 20px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; z-index: 10; flex-wrap: wrap;
     }
-    .topbar h1 { font-size: 17px; font-weight: 900; color: #111; flex: 1; }
+    .topbar h1 { font-size: 16px; font-weight: 900; color: #111; flex: 1; min-width: 160px; }
     .topbar .badge { background: #fce4ec; color: #c2185b; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.5px; }
     .btn {
       border: none; border-radius: 10px;
-      padding: 9px 18px; font-family: inherit; font-size: 13px; font-weight: 700;
+      padding: 9px 16px; font-family: inherit; font-size: 13px; font-weight: 700;
       cursor: pointer; transition: opacity .15s; white-space: nowrap;
     }
-    .btn:hover  { opacity: .82; }
+    .btn:hover { opacity: .82; }
     .btn.loading, .btn:disabled { opacity: .5; pointer-events: none; }
-    .btn-preview { background: #8B5E3C; color: #fff; }
-    .btn-queue   { background: #2563eb; color: #fff; }
-    .btn-send    { background: #6B3217; color: #fff; }
+    .btn-preview  { background: #8B5E3C; color: #fff; }
+    .btn-queue    { background: #2563eb; color: #fff; }
+    .btn-send     { background: #6B3217; color: #fff; }
+    .btn-clear-q  { background: #fee2e2; color: #991b1b; font-size: 12px; padding: 8px 12px; }
     .action-group { display: flex; align-items: center; gap: 8px; }
-    .result-tag {
-      font-size: 12px; font-weight: 700; padding: 4px 10px;
-      border-radius: 99px; white-space: nowrap;
-    }
-    .result-ok  { background: #d1fae5; color: #065f46; }
-    .result-err { background: #fee2e2; color: #991b1b; }
-    .result-info{ background: #e0e7ff; color: #3730a3; }
+    .result-tag { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 99px; white-space: nowrap; }
+    .result-ok   { background: #d1fae5; color: #065f46; }
+    .result-err  { background: #fee2e2; color: #991b1b; }
+    .result-info { background: #e0e7ff; color: #3730a3; }
 
-    /* ── main split ── */
+    /* split layout */
     .split { display: flex; flex: 1; overflow: hidden; }
 
-    /* ── form panel ── */
+    /* form panel */
     .form-panel {
-      width: 360px;
-      flex-shrink: 0;
-      background: #fff;
-      border-right: 1px solid #e5e7eb;
-      overflow-y: auto;
-      padding: 20px;
+      width: 380px; flex-shrink: 0; background: #fff;
+      border-right: 1px solid #e5e7eb; overflow-y: auto; padding: 16px 18px 32px;
     }
     .section-label {
       font-size: 10px; font-weight: 900; color: #9ca3af;
       text-transform: uppercase; letter-spacing: 0.8px;
-      margin: 20px 0 10px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid #f3f4f6;
+      margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 1px solid #f3f4f6;
     }
     .section-label:first-child { margin-top: 0; }
-    .field { margin-bottom: 12px; }
-    .field label { display: block; font-size: 12px; font-weight: 700; color: #555; margin-bottom: 4px; }
-    .field input, .field textarea {
-      width: 100%; padding: 8px 10px;
+
+    .field { margin-bottom: 10px; }
+    .field label { display: block; font-size: 12px; font-weight: 700; color: #555; margin-bottom: 3px; }
+    .field input[type=text], .field input[type=number], .field select, .field textarea {
+      width: 100%; padding: 7px 10px;
       border: 1px solid #d1d5db; border-radius: 8px;
       font-family: inherit; font-size: 13px; color: #111;
-      resize: vertical; transition: border-color .15s;
+      resize: vertical; transition: border-color .15s; background: #fff;
     }
-    .field input:focus, .field textarea:focus { outline: none; border-color: #6B3217; }
-    .field .hint { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+    .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: #6B3217; }
+    .field .hint { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+    .opt { font-weight: 400; color: #9ca3af; font-size: 10px; }
+    .req { color: #dc2626; }
     .field-row { display: flex; gap: 8px; }
     .field-row .field { flex: 1; min-width: 0; }
-    .field-row .field.emoji { flex: 0 0 64px; }
-    .field-row .field.emoji input { text-align: center; font-size: 18px; }
 
-    /* ── preview panel ── */
+    /* product blocks */
+    .product-block {
+      border: 1px solid #e5e7eb; border-radius: 10px;
+      padding: 12px 14px; margin-bottom: 10px; background: #fafafa;
+    }
+    .product-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+    }
+    .product-label { font-size: 11px; font-weight: 900; color: #6B3217; text-transform: uppercase; letter-spacing: 0.6px; }
+
+    /* image dropzone (compact) */
+    .img-dropzone {
+      border: 2px dashed #d1d5db; border-radius: 8px; padding: 10px 12px;
+      text-align: center; cursor: pointer; transition: border-color .15s; position: relative;
+      margin-bottom: 8px;
+    }
+    .img-dropzone:hover { border-color: #6B3217; }
+    .img-dropzone .ph { color: #9ca3af; font-size: 12px; }
+    .img-dropzone img.thumb { display: none; max-width: 100%; max-height: 100px; border-radius: 6px; margin-top: 6px; }
+    .img-status { font-size: 11px; font-weight: 700; margin-top: 4px; display: none; }
+    .img-actions { display: flex; gap: 6px; margin-top: 5px; align-items: center; flex-wrap: wrap; }
+    .img-link-btn {
+      background: none; border: 1px solid #d1d5db; border-radius: 6px;
+      padding: 3px 8px; font-size: 11px; font-weight: 700; color: #555; cursor: pointer; font-family: inherit;
+    }
+    .img-link-btn:hover { border-color: #6B3217; color: #6B3217; }
+    .img-clear-btn {
+      background: none; border: none; color: #ef4444; font-size: 11px; font-weight: 700;
+      cursor: pointer; font-family: inherit; display: none;
+    }
+
+    /* product info sub-section */
+    .product-info {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px 12px 4px;
+      margin-top: 10px;
+    }
+
+    /* toggle buttons */
+    .toggle-btn {
+      width: 100%; padding: 9px; background: #f3f4f6; border: 1px dashed #d1d5db;
+      border-radius: 8px; font-family: inherit; font-size: 12px; font-weight: 700;
+      color: #6B3217; cursor: pointer; margin-bottom: 8px; transition: background .15s;
+    }
+    .toggle-btn:hover { background: #fce4ec; }
+    .remove-btn {
+      background: none; border: none; color: #9ca3af; font-size: 11px; font-weight: 700;
+      cursor: pointer; font-family: inherit; padding: 0;
+    }
+    .remove-btn:hover { color: #ef4444; }
+
+    /* preview panel */
     .preview-panel { flex: 1; overflow: hidden; display: flex; flex-direction: column; background: #e5e7eb; }
     .preview-toolbar {
       background: #fff; border-bottom: 1px solid #e5e7eb;
@@ -88,39 +128,21 @@
       padding: 4px 10px; font-size: 12px; font-family: inherit; cursor: pointer; color: #555;
     }
     .device-btn.active { background: #6B3217; color: #fff; border-color: #6B3217; }
-    .preview-wrap { flex: 1; overflow: auto; display: flex; justify-content: center; padding: 24px; }
-    .preview-wrap iframe {
-      background: #fff;
-      border: none;
-      border-radius: 4px;
-      box-shadow: 0 4px 24px rgba(0,0,0,.12);
-      transition: width .2s;
-    }
-    .preview-placeholder {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      height: 100%; color: #9ca3af; gap: 8px; text-align: center;
-    }
+    .preview-wrap { flex: 1; overflow: auto; display: flex; justify-content: center; padding: 20px; }
+    .preview-wrap iframe { background: #fff; border: none; border-radius: 4px; box-shadow: 0 4px 24px rgba(0,0,0,.12); transition: width .2s; }
+    .preview-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #9ca3af; gap: 8px; text-align: center; }
     .preview-placeholder .big { font-size: 48px; }
     .preview-placeholder p { font-size: 14px; }
 
-    /* ── modal ── */
-    .modal-backdrop {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,.45); z-index: 100;
-      align-items: center; justify-content: center;
-    }
+    /* modal */
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100; align-items: center; justify-content: center; }
     .modal-backdrop.open { display: flex; }
-    .modal {
-      background: #fff; border-radius: 16px; padding: 32px 28px;
-      max-width: 360px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,.18);
-      text-align: center;
-    }
-    .modal h2 { font-size: 18px; font-weight: 900; margin-bottom: 10px; color: #111; }
-    .modal p  { font-size: 14px; color: #555; margin-bottom: 24px; line-height: 1.5; }
+    .modal { background: #fff; border-radius: 16px; padding: 28px 24px; max-width: 340px; width: 90%; box-shadow: 0 8px 32px rgba(0,0,0,.18); text-align: center; }
+    .modal h2 { font-size: 17px; font-weight: 900; margin-bottom: 8px; color: #111; }
+    .modal p { font-size: 14px; color: #555; margin-bottom: 20px; line-height: 1.5; }
     .modal-actions { display: flex; gap: 10px; justify-content: center; }
-    .modal-actions .btn { min-width: 110px; }
+    .modal-actions .btn { min-width: 100px; }
     .btn-cancel-modal { background: #e5e7eb; color: #374151; }
-    .btn-clear { background: #fee2e2; color: #991b1b; }
   </style>
 </head>
 <body>
@@ -131,121 +153,217 @@
   <div class="action-group">
     <span id="queueResult"></span>
     <button class="btn btn-queue" id="queueBtn" onclick="queueEmails()">Encolar envíos</button>
-    <button class="btn btn-clear" id="clearQueueBtn" onclick="clearQueue()">Limpiar cola</button>
+    <button class="btn btn-clear-q" id="clearQueueBtn" onclick="clearQueue()">Limpiar cola</button>
   </div>
   <div class="action-group">
     <span id="sendResult"></span>
     <button class="btn btn-send" id="sendBtn" onclick="sendQueued()">Enviar ahora</button>
   </div>
   <div class="action-group">
-    <span class="status-msg" id="previewStatus"></span>
+    <span class="result-tag" id="previewStatus"></span>
     <button class="btn btn-preview" id="previewBtn" onclick="renderPreview()">Previsualizar</button>
   </div>
 </div>
 
 <div class="split">
 
-  <!-- ══════════════════════════ FORM PANEL -->
+  <!-- ══ FORM PANEL ══ -->
   <div class="form-panel">
     <form id="builderForm">
 
+      <!-- INBOX -->
       <div class="section-label">Inbox</div>
 
       <div class="field">
+        <label>Ocasión</label>
+        <select name="occasion" id="occasionSel" onchange="onOccasionChange()">
+          <option value="weekend">Promo de fin de semana 🎉</option>
+          <option value="birthday">Cumpleaños / fecha especial 🎂</option>
+          <option value="seasonal">Novedad de temporada 🌸</option>
+          <option value="other">Otra ocasión ✨</option>
+        </select>
+      </div>
+
+      <div class="field">
         <label>Asunto del email</label>
-        <input type="text" name="subject_line" maxlength="60"
-          value="¡Algo especial para vos esta semana en Principessa!">
-        <div class="hint">Máx. 60 caracteres</div>
-      </div>
-      <div class="field">
-        <label>Preview text (snippet del inbox)</label>
-        <input type="text" name="preview_text" maxlength="90"
-          value="Presentá este email y llevate un regalo especial 💛">
-        <div class="hint">Máx. 90 caracteres</div>
+        <input type="text" name="subject_line" id="subjectLine" maxlength="70"
+               value="¡Fin de semana dulce en Principessa! 🍰">
+        <div class="hint">Máx. 70 caracteres</div>
       </div>
 
-      <div class="section-label">Hero</div>
+      <!-- APERTURA -->
+      <div class="section-label">Apertura <span class="opt">opcional</span></div>
 
       <div class="field">
-        <label>Titular (headline)</label>
-        <textarea name="headline" rows="2">¡Esta semana tenemos algo irresistible para endulzar tu momento!</textarea>
-      </div>
-      <div class="field">
-        <label>Frase resaltada</label>
-        <input type="text" name="highlight_phrase" value="un regalo dulce especial">
-        <div class="hint">3-6 palabras que van dentro del badge resaltado</div>
-      </div>
-      <div class="field">
-        <label>Oración introductoria (después del resaltado)</label>
-        <textarea name="body_intro" rows="2">Vení a visitarnos y disfrutá de nuestras tortas artesanales con ingredientes de primera calidad.</textarea>
+        <label>Título</label>
+        <input type="text" name="title" maxlength="80"
+               value="Oferta especial en Principessa!">
       </div>
 
-      <div class="section-label">Bloque 1</div>
+      <div class="field">
+        <label>Texto de apertura</label>
+        <textarea name="intro_text" rows="3">Hola, quisiera compartirte esta promo. Espero te guste!
+Brisa</textarea>
+      </div>
 
-      <div class="field-row">
-        <div class="field emoji">
-          <label>Emoji</label>
-          <input type="text" name="block_1_emoji" value="🎂">
+      <!-- PRODUCTOS -->
+      <div class="section-label">Productos</div>
+
+      <!-- Product 1 -->
+      <div class="product-block" id="product_1">
+        <div class="product-header">
+          <span class="product-label">Producto 1</span>
         </div>
-        <div class="field">
-          <label>Título</label>
-          <input type="text" name="block_1_title" maxlength="20" value="Tortas clásicas">
+        <div class="img-dropzone" id="dropzone_1" onclick="pickFromComputer(1)"
+             ondragover="onDragOver(event,1)" ondragleave="onDragLeave(event,1)" ondrop="onDrop(event,1)">
+          <div class="ph" id="ph_1">📷 Foto del producto <span style="color:#d1d5db">— clic o arrastrá</span></div>
+          <img class="thumb" id="thumb_1" alt="">
+          <div class="img-status" id="imgStatus_1"></div>
         </div>
-      </div>
-      <div class="field">
-        <label>Descripción</label>
-        <textarea name="block_1_text" rows="2">Torta de ricota, Balcarce y Matilda elaboradas con los mejores ingredientes.</textarea>
-      </div>
-
-      <div class="section-label">Bloque 2</div>
-
-      <div class="field-row">
-        <div class="field emoji">
-          <label>Emoji</label>
-          <input type="text" name="block_2_emoji" value="✨">
+        <input type="file" id="fileInput_1" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleFileSelect(this,1)">
+        <input type="hidden" name="product_1_image_url" id="imageUrl_1">
+        <div class="img-actions">
+          <button type="button" class="img-link-btn" onclick="openPicker(1)">📂 Imagen existente</button>
+          <button type="button" class="img-clear-btn" id="clearImg_1" onclick="clearImageSlot(1)">✕ Quitar foto</button>
         </div>
-        <div class="field">
-          <label>Título</label>
-          <input type="text" name="block_2_title" maxlength="20" value="Especialidades">
-        </div>
-      </div>
-      <div class="field">
-        <label>Descripción</label>
-        <textarea name="block_2_text" rows="2">Cheesecake y carrot cake para ocasiones que merecen algo único.</textarea>
-      </div>
-
-      <div class="section-label">Imagen promocional</div>
-
-      <div class="field">
-        <label>Subir imagen <span style="color:#9ca3af;font-weight:400;">(opcional · JPEG / PNG / WEBP · máx. 5 MB)</span></label>
-        <div id="imageDropzone" style="border:2px dashed #d1d5db;border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:border-color .15s;" onclick="document.getElementById('imageFile').click()">
-          <div id="imagePlaceholder" style="color:#9ca3af;font-size:13px;">Hacé clic para seleccionar una imagen</div>
-          <img id="imageThumbnail" src="" alt="" style="display:none;max-width:100%;max-height:160px;border-radius:8px;margin-top:8px;">
-          <div id="imageStatusRow" style="display:none;margin-top:8px;font-size:12px;font-weight:700;"></div>
-        </div>
-        <input type="file" id="imageFile" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="handleImageSelect(this)">
-        <input type="hidden" name="promo_image_url" id="promoImageUrl">
-        <div style="display:flex;gap:8px;margin-top:6px;align-items:center;">
-          <button type="button" id="clearImageBtn" onclick="clearImage()" style="display:none;background:none;border:none;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">✕ Quitar imagen</button>
-          <button type="button" onclick="openImagePicker()" style="background:none;border:1px solid #d1d5db;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;">📂 Seleccionar existente</button>
+        <div class="product-info">
+          <div class="field">
+            <label>Nombre <span class="req">*</span></label>
+            <input type="text" name="product_1_name" placeholder="Ej: Torta Matilda" maxlength="60">
+          </div>
+          <div class="field">
+            <label>Descripción <span class="opt">opcional</span></label>
+            <textarea name="product_1_desc" rows="2" placeholder="Breve descripción del producto..."></textarea>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Precio <span class="opt">opcional</span></label>
+              <input type="number" name="product_1_price" placeholder="Ej: 8500" min="0" step="1" onkeydown="return blockNonInt(event)">
+              <div class="hint">Solo números</div>
+            </div>
+            <div class="field">
+              <label>Descuento <span class="opt">opcional</span></label>
+              <input type="number" name="product_1_discount" placeholder="Ej: 15" min="0" max="99" step="1" onkeydown="return blockNonInt(event)">
+              <div class="hint">Solo números</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="section-label">Cierre</div>
+      <button type="button" class="toggle-btn" id="addBtn_2" onclick="showProduct(2)">+ Agregar producto 2</button>
 
-      <div class="field">
-        <label>Mensaje de cierre</label>
-        <textarea name="closing_message" rows="4">Gracias por ser parte de nuestra comunidad ✨
+      <!-- Product 2 -->
+      <div class="product-block" id="product_2" style="display:none;">
+        <div class="product-header">
+          <span class="product-label">Producto 2</span>
+          <button type="button" class="remove-btn" onclick="hideProduct(2)">✕ Quitar</button>
+        </div>
+        <div class="img-dropzone" id="dropzone_2" onclick="pickFromComputer(2)"
+             ondragover="onDragOver(event,2)" ondragleave="onDragLeave(event,2)" ondrop="onDrop(event,2)">
+          <div class="ph" id="ph_2">📷 Foto del producto <span style="color:#d1d5db">— clic o arrastrá</span></div>
+          <img class="thumb" id="thumb_2" alt="">
+          <div class="img-status" id="imgStatus_2"></div>
+        </div>
+        <input type="file" id="fileInput_2" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleFileSelect(this,2)">
+        <input type="hidden" name="product_2_image_url" id="imageUrl_2">
+        <div class="img-actions">
+          <button type="button" class="img-link-btn" onclick="openPicker(2)">📂 Imagen existente</button>
+          <button type="button" class="img-clear-btn" id="clearImg_2" onclick="clearImageSlot(2)">✕ Quitar foto</button>
+        </div>
+        <div class="product-info">
+          <div class="field">
+            <label>Nombre</label>
+            <input type="text" name="product_2_name" placeholder="Ej: Cheesecake" maxlength="60">
+          </div>
+          <div class="field">
+            <label>Descripción <span class="opt">opcional</span></label>
+            <textarea name="product_2_desc" rows="2" placeholder="Breve descripción del producto..."></textarea>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Precio <span class="opt">opcional</span></label>
+              <input type="number" name="product_2_price" placeholder="Ej: 7500" min="0" step="1" onkeydown="return blockNonInt(event)">
+              <div class="hint">Solo números</div>
+            </div>
+            <div class="field">
+              <label>Descuento <span class="opt">opcional</span></label>
+              <input type="number" name="product_2_discount" placeholder="Ej: 10" min="0" max="99" step="1" onkeydown="return blockNonInt(event)">
+              <div class="hint">Solo números</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-Cada torta es elaborada con amor y los mejores ingredientes.
+      <button type="button" class="toggle-btn" id="addBtn_3" onclick="showProduct(3)" style="display:none;">+ Agregar producto 3</button>
 
-Te esperamos en Principessa Pastelería 🎂</textarea>
+      <!-- Product 3 -->
+      <div class="product-block" id="product_3" style="display:none;">
+        <div class="product-header">
+          <span class="product-label">Producto 3</span>
+          <button type="button" class="remove-btn" onclick="hideProduct(3)">✕ Quitar</button>
+        </div>
+        <div class="img-dropzone" id="dropzone_3" onclick="pickFromComputer(3)"
+             ondragover="onDragOver(event,3)" ondragleave="onDragLeave(event,3)" ondrop="onDrop(event,3)">
+          <div class="ph" id="ph_3">📷 Foto del producto <span style="color:#d1d5db">— clic o arrastrá</span></div>
+          <img class="thumb" id="thumb_3" alt="">
+          <div class="img-status" id="imgStatus_3"></div>
+        </div>
+        <input type="file" id="fileInput_3" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleFileSelect(this,3)">
+        <input type="hidden" name="product_3_image_url" id="imageUrl_3">
+        <div class="img-actions">
+          <button type="button" class="img-link-btn" onclick="openPicker(3)">📂 Imagen existente</button>
+          <button type="button" class="img-clear-btn" id="clearImg_3" onclick="clearImageSlot(3)">✕ Quitar foto</button>
+        </div>
+        <div class="product-info">
+          <div class="field">
+            <label>Nombre</label>
+            <input type="text" name="product_3_name" placeholder="Ej: Carrot Cake" maxlength="60">
+          </div>
+          <div class="field">
+            <label>Descripción <span class="opt">opcional</span></label>
+            <textarea name="product_3_desc" rows="2" placeholder="Breve descripción del producto..."></textarea>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Precio <span class="opt">opcional</span></label>
+              <input type="number" name="product_3_price" placeholder="Ej: 6500" min="0" step="1" onkeydown="return blockNonInt(event)">
+              <div class="hint">Solo números</div>
+            </div>
+            <div class="field">
+              <label>Descuento <span class="opt">opcional</span></label>
+              <input type="number" name="product_3_discount" placeholder="Ej: 10" min="0" max="99" step="1" onkeydown="return blockNonInt(event)">
+              <div class="hint">Solo números</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROMO BLOCK -->
+      <div class="section-label">Promo / Descuento <span class="opt">opcional</span></div>
+
+      <button type="button" class="toggle-btn" id="addPromoBtn" onclick="showPromo()">+ Agregar bloque de promo</button>
+
+      <div id="promoBlock" style="display:none;">
+        <div class="product-block">
+          <div class="product-header">
+            <span class="product-label">Bloque de promo</span>
+            <button type="button" class="remove-btn" onclick="hidePromo()">✕ Quitar</button>
+          </div>
+          <div class="field">
+            <label>Texto de promo</label>
+            <textarea name="promo_text" rows="2" placeholder="Ej: ¡Esta semana 15% OFF en todos los pedidos!"></textarea>
+          </div>
+          <div class="field">
+            <label>Código de descuento <span class="opt">opcional</span></label>
+            <input type="text" name="promo_code" placeholder="Ej: DULCE15" style="text-transform:uppercase;letter-spacing:2px;">
+          </div>
+        </div>
       </div>
 
     </form>
   </div>
 
-  <!-- ══════════════════════════ PREVIEW PANEL -->
+  <!-- ══ PREVIEW PANEL ══ -->
   <div class="preview-panel">
     <div class="preview-toolbar">
       <span>Vista previa</span>
@@ -255,9 +373,9 @@ Te esperamos en Principessa Pastelería 🎂</textarea>
     <div class="preview-wrap" id="previewWrap">
       <div class="preview-placeholder" id="placeholder">
         <div class="big">✉️</div>
-        <p>Completá los campos y hacé clic en<br><strong>Previsualizar</strong> para ver el email.</p>
+        <p>Completá al menos un producto y hacé clic en<br><strong>Previsualizar</strong> para ver el email.</p>
       </div>
-      <iframe id="previewFrame" style="display:none; width:640px; height:100%;"></iframe>
+      <iframe id="previewFrame" style="display:none; width:580px; height:100%;"></iframe>
     </div>
   </div>
 
@@ -265,12 +383,12 @@ Te esperamos en Principessa Pastelería 🎂</textarea>
 
 <!-- ══ IMAGE PICKER MODAL ══ -->
 <div class="modal-backdrop" id="imagePickerModal">
-  <div class="modal" style="max-width:560px;width:95%;">
+  <div class="modal" style="max-width:540px;width:95%;">
     <h2>Seleccionar imagen existente</h2>
-    <p id="imagePickerStatus" style="margin-bottom:16px;">Cargando...</p>
-    <div id="imageGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-height:360px;overflow-y:auto;margin-bottom:20px;"></div>
+    <p id="imagePickerStatus" style="margin-bottom:12px;">Cargando...</p>
+    <div id="imageGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:320px;overflow-y:auto;margin-bottom:16px;"></div>
     <div class="modal-actions">
-      <button class="btn btn-cancel-modal" onclick="closeImagePicker()">Cerrar</button>
+      <button class="btn btn-cancel-modal" onclick="closePicker()">Cerrar</button>
     </div>
   </div>
 </div>
@@ -281,18 +399,73 @@ Te esperamos en Principessa Pastelería 🎂</textarea>
     <h2>Confirmar cola de envíos</h2>
     <p id="modalMsg">Cargando...</p>
     <div class="modal-actions">
-      <button class="btn btn-cancel-modal" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-cancel-modal" onclick="closeQueueModal()">Cancelar</button>
       <button class="btn btn-queue" id="modalConfirmBtn" onclick="confirmQueue()">Confirmar</button>
     </div>
   </div>
 </div>
 
 <script>
-  const WIDTHS = { desktop: '640px', mobile: '375px' };
+  function blockNonInt(e) {
+    return ['0','1','2','3','4','5','6','7','8','9',
+            'Backspace','Delete','Tab','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key);
+  }
+
+  const WIDTHS = { desktop: '580px', mobile: '375px' };
   let currentDevice = 'desktop';
   const adminKey = sessionStorage.getItem('builderKey') || '';
   if (!adminKey) { window.location.replace('/builder-login'); }
 
+  // ── occasion → subject ────────────────────────────────────────────────────
+  const OCCASION_SUBJECTS = {
+    weekend:  '¡Fin de semana dulce en Principessa! 🍰',
+    birthday: '¿Cumpleaños a la vista? ¡Tenemos algo especial para vos! 🎂',
+    seasonal: '¡Novedades de temporada en Principessa Pastelería! 🌸',
+    other:    '¡Novedades de Principessa Pastelería! ✨',
+  };
+  let lastOccasionSubject = OCCASION_SUBJECTS.weekend;
+
+  function onOccasionChange() {
+    const sel = document.getElementById('occasionSel');
+    const subj = document.getElementById('subjectLine');
+    const current = subj.value.trim();
+    if (!current || current === lastOccasionSubject) {
+      subj.value = OCCASION_SUBJECTS[sel.value] || '';
+    }
+    lastOccasionSubject = OCCASION_SUBJECTS[sel.value] || '';
+  }
+
+  // ── product blocks ────────────────────────────────────────────────────────
+  function showProduct(n) {
+    document.getElementById(`product_${n}`).style.display = 'block';
+    document.getElementById(`addBtn_${n}`).style.display = 'none';
+    if (n === 2) document.getElementById('addBtn_3').style.display = 'block';
+  }
+
+  function hideProduct(n) {
+    const block = document.getElementById(`product_${n}`);
+    block.querySelectorAll('input[type=text], textarea').forEach(el => el.value = '');
+    clearImageSlot(n);
+    block.style.display = 'none';
+    document.getElementById(`addBtn_${n}`).style.display = 'block';
+    if (n === 2) {
+      if (document.getElementById('product_3').style.display !== 'none') hideProduct(3);
+      document.getElementById('addBtn_3').style.display = 'none';
+    }
+  }
+
+  function showPromo() {
+    document.getElementById('promoBlock').style.display = 'block';
+    document.getElementById('addPromoBtn').style.display = 'none';
+  }
+
+  function hidePromo() {
+    document.getElementById('promoBlock').querySelectorAll('input[type=text], textarea').forEach(el => el.value = '');
+    document.getElementById('promoBlock').style.display = 'none';
+    document.getElementById('addPromoBtn').style.display = 'block';
+  }
+
+  // ── preview / device ──────────────────────────────────────────────────────
   function setWidth(device) {
     currentDevice = device;
     document.getElementById('previewFrame').style.width = WIDTHS[device];
@@ -303,72 +476,59 @@ Te esperamos en Principessa Pastelería 🎂</textarea>
   function setResult(elId, text, type) {
     const el = document.getElementById(elId);
     el.textContent = text;
-    el.className = 'result-tag result-' + type;
+    el.className = 'result-tag' + (type ? ' result-' + type : '');
   }
 
   async function renderPreview() {
     const btn = document.getElementById('previewBtn');
     const status = document.getElementById('previewStatus');
-    btn.classList.add('loading');
-    btn.textContent = 'Generando...';
-    status.textContent = '';
-
+    btn.classList.add('loading'); btn.textContent = 'Generando...';
+    setResult('previewStatus', '', '');
     try {
       const res = await fetch('/admin/email-builder/render', {
         method: 'POST',
         headers: { 'x-admin-key': adminKey },
         body: new FormData(document.getElementById('builderForm')),
       });
-      if (!res.ok) { status.textContent = 'Error ' + res.status; return; }
-
+      if (!res.ok) { setResult('previewStatus', 'Error ' + res.status, 'err'); return; }
       const html = await res.text();
       const frame = document.getElementById('previewFrame');
       frame.style.display = 'block';
       frame.style.width = WIDTHS[currentDevice];
       document.getElementById('placeholder').style.display = 'none';
       frame.srcdoc = html;
-      status.textContent = new Date().toLocaleTimeString('es-AR');
+      setResult('previewStatus', new Date().toLocaleTimeString('es-AR'), '');
     } catch (e) {
-      status.textContent = 'Error: ' + e.message;
+      setResult('previewStatus', 'Error: ' + e.message, 'err');
     } finally {
-      btn.classList.remove('loading');
-      btn.textContent = 'Previsualizar';
+      btn.classList.remove('loading'); btn.textContent = 'Previsualizar';
     }
   }
 
+  // ── queue flow ────────────────────────────────────────────────────────────
   async function queueEmails() {
     setResult('queueResult', '', '');
-    const countBtn = document.getElementById('queueBtn');
-    countBtn.classList.add('loading');
-    countBtn.textContent = 'Verificando...';
-
+    const btn = document.getElementById('queueBtn');
+    btn.classList.add('loading'); btn.textContent = 'Verificando...';
     try {
-      const res = await fetch('/admin/email-builder/eligible-count', {
-        headers: { 'x-admin-key': adminKey },
-      });
+      const res = await fetch('/admin/email-builder/eligible-count', { headers: { 'x-admin-key': adminKey } });
       const data = await res.json();
       if (!res.ok) { setResult('queueResult', 'Error: ' + (data.detail || res.status), 'err'); return; }
-
       document.getElementById('modalMsg').textContent =
         `Vas a encolar el email a ${data.count} clientes con consentimiento activo. ¿Confirmar?`;
       document.getElementById('queueModal').classList.add('open');
     } catch (e) {
       setResult('queueResult', 'Error de red', 'err');
     } finally {
-      countBtn.classList.remove('loading');
-      countBtn.textContent = 'Encolar envíos';
+      btn.classList.remove('loading'); btn.textContent = 'Encolar envíos';
     }
   }
 
-  function closeModal() {
-    document.getElementById('queueModal').classList.remove('open');
-  }
+  function closeQueueModal() { document.getElementById('queueModal').classList.remove('open'); }
 
   async function confirmQueue() {
-    const confirmBtn = document.getElementById('modalConfirmBtn');
-    confirmBtn.classList.add('loading');
-    confirmBtn.textContent = 'Encolando...';
-
+    const btn = document.getElementById('modalConfirmBtn');
+    btn.classList.add('loading'); btn.textContent = 'Encolando...';
     try {
       const res = await fetch('/admin/email-builder/queue', {
         method: 'POST',
@@ -376,15 +536,14 @@ Te esperamos en Principessa Pastelería 🎂</textarea>
         body: new FormData(document.getElementById('builderForm')),
       });
       const data = await res.json();
-      closeModal();
+      closeQueueModal();
       if (!res.ok) { setResult('queueResult', 'Error: ' + (data.detail || res.status), 'err'); return; }
       setResult('queueResult', data.queued + ' encolados ✓', 'ok');
     } catch (e) {
-      closeModal();
+      closeQueueModal();
       setResult('queueResult', 'Error de red', 'err');
     } finally {
-      confirmBtn.classList.remove('loading');
-      confirmBtn.textContent = 'Confirmar';
+      btn.classList.remove('loading'); btn.textContent = 'Confirmar';
     }
   }
 
@@ -393,10 +552,7 @@ Te esperamos en Principessa Pastelería 🎂</textarea>
     const btn = document.getElementById('clearQueueBtn');
     btn.classList.add('loading');
     try {
-      const res = await fetch('/admin/email-builder/clear-queue', {
-        method: 'DELETE',
-        headers: { 'x-admin-key': adminKey },
-      });
+      const res = await fetch('/admin/email-builder/clear-queue', { method: 'DELETE', headers: { 'x-admin-key': adminKey } });
       const data = await res.json();
       if (!res.ok) { setResult('queueResult', 'Error: ' + (data.detail || res.status), 'err'); return; }
       setResult('queueResult', data.deleted + ' eliminados de la cola', 'info');
@@ -409,102 +565,112 @@ Te esperamos en Principessa Pastelería 🎂</textarea>
 
   async function sendQueued() {
     const btn = document.getElementById('sendBtn');
-    btn.classList.add('loading');
-    btn.textContent = 'Solicitando...';
+    btn.classList.add('loading'); btn.textContent = 'Solicitando...';
     setResult('sendResult', '', '');
-
     try {
-      const res = await fetch('/admin/email-builder/request-send-approval', {
-        method: 'POST',
-        headers: { 'x-admin-key': adminKey },
-      });
+      const res = await fetch('/admin/email-builder/request-send-approval', { method: 'POST', headers: { 'x-admin-key': adminKey } });
       const data = await res.json();
-      if (!res.ok) {
-        setResult('sendResult', 'Error: ' + (data.detail || res.status), 'err');
-        return;
-      }
+      if (!res.ok) { setResult('sendResult', 'Error: ' + (data.detail || res.status), 'err'); return; }
       setResult('sendResult', `Email de aprobación enviado (${data.count} en cola) ✓`, 'info');
       btn.disabled = true;
     } catch (e) {
       setResult('sendResult', 'Error de red', 'err');
     } finally {
-      btn.classList.remove('loading');
-      btn.textContent = 'Enviar ahora';
+      btn.classList.remove('loading'); btn.textContent = 'Enviar ahora';
     }
   }
 
   // ── image upload ──────────────────────────────────────────────────────────
+  let activePickerSlot = 1;
 
-  async function handleImageSelect(input) {
+  function pickFromComputer(slot) {
+    document.getElementById(`fileInput_${slot}`).click();
+  }
+
+  async function handleFileSelect(input, slot) {
     if (!input.files.length) return;
     const file = input.files[0];
+    const objUrl = URL.createObjectURL(file);
 
-    const dropzone  = document.getElementById('imageDropzone');
-    const statusRow = document.getElementById('imageStatusRow');
-    const thumb     = document.getElementById('imageThumbnail');
-    const clearBtn  = document.getElementById('clearImageBtn');
-    const placeholder = document.getElementById('imagePlaceholder');
+    const thumb = document.getElementById(`thumb_${slot}`);
+    const ph    = document.getElementById(`ph_${slot}`);
+    const st    = document.getElementById(`imgStatus_${slot}`);
+    const dz    = document.getElementById(`dropzone_${slot}`);
+    const clr   = document.getElementById(`clearImg_${slot}`);
 
-    // show local thumbnail immediately
-    const objectUrl = URL.createObjectURL(file);
-    thumb.src = objectUrl;
-    thumb.style.display = 'block';
-    placeholder.style.display = 'none';
-    statusRow.style.display = 'block';
-    statusRow.style.color = '#6b7280';
-    statusRow.textContent = 'Subiendo...';
-    dropzone.style.borderColor = '#93c5fd';
+    thumb.src = objUrl; thumb.style.display = 'block';
+    ph.style.display = 'none';
+    st.style.display = 'block'; st.style.color = '#6b7280'; st.textContent = 'Subiendo...';
+    dz.style.borderColor = '#93c5fd';
 
-    const formData = new FormData();
-    formData.append('file', file);
-
+    const fd = new FormData();
+    fd.append('file', file);
     try {
-      const res = await fetch('/admin/email-builder/upload-image', {
-        method: 'POST',
-        headers: { 'x-admin-key': adminKey },
-        body: formData,
-      });
+      const res  = await fetch('/admin/email-builder/upload-image', { method: 'POST', headers: { 'x-admin-key': adminKey }, body: fd });
       const data = await res.json();
       if (!res.ok) {
-        statusRow.style.color = '#ef4444';
-        statusRow.textContent = 'Error: ' + (data.detail || res.status);
-        dropzone.style.borderColor = '#fca5a5';
-        return;
+        st.style.color = '#ef4444'; st.textContent = 'Error: ' + (data.detail || res.status);
+        dz.style.borderColor = '#fca5a5'; return;
       }
-      document.getElementById('promoImageUrl').value = data.url;
-      statusRow.style.color = '#059669';
-      statusRow.textContent = '✓ Imagen lista';
-      dropzone.style.borderColor = '#6ee7b7';
-      clearBtn.style.display = 'inline-block';
+      document.getElementById(`imageUrl_${slot}`).value = data.url;
+      st.style.color = '#059669'; st.textContent = '✓ Imagen lista';
+      dz.style.borderColor = '#6ee7b7';
+      clr.style.display = 'inline-block';
     } catch (e) {
-      statusRow.style.color = '#ef4444';
-      statusRow.textContent = 'Error de red: ' + e.message;
-      dropzone.style.borderColor = '#fca5a5';
+      st.style.color = '#ef4444'; st.textContent = 'Error: ' + e.message;
+      dz.style.borderColor = '#fca5a5';
     }
   }
 
-  async function openImagePicker() {
+  function clearImageSlot(slot) {
+    document.getElementById(`fileInput_${slot}`).value = '';
+    document.getElementById(`imageUrl_${slot}`).value = '';
+    const thumb = document.getElementById(`thumb_${slot}`);
+    thumb.src = ''; thumb.style.display = 'none';
+    document.getElementById(`ph_${slot}`).style.display = 'block';
+    document.getElementById(`imgStatus_${slot}`).style.display = 'none';
+    document.getElementById(`clearImg_${slot}`).style.display = 'none';
+    document.getElementById(`dropzone_${slot}`).style.borderColor = '#d1d5db';
+  }
+
+  function onDragOver(e, slot) {
+    e.preventDefault();
+    document.getElementById(`dropzone_${slot}`).style.borderColor = '#6B3217';
+  }
+  function onDragLeave(e, slot) {
+    const url = document.getElementById(`imageUrl_${slot}`).value;
+    document.getElementById(`dropzone_${slot}`).style.borderColor = url ? '#6ee7b7' : '#d1d5db';
+  }
+  function onDrop(e, slot) {
+    e.preventDefault();
+    if (e.dataTransfer.files.length) {
+      const input = document.getElementById(`fileInput_${slot}`);
+      input.files = e.dataTransfer.files;
+      handleFileSelect(input, slot);
+    }
+  }
+
+  // ── image picker modal ────────────────────────────────────────────────────
+  async function openPicker(slot) {
+    activePickerSlot = slot;
     document.getElementById('imagePickerModal').classList.add('open');
     const grid   = document.getElementById('imageGrid');
     const status = document.getElementById('imagePickerStatus');
-    grid.innerHTML = '';
-    status.textContent = 'Cargando...';
-
+    grid.innerHTML = ''; status.textContent = 'Cargando...';
     try {
       const res  = await fetch('/admin/email-builder/images', { headers: { 'x-admin-key': adminKey } });
       const data = await res.json();
       if (!res.ok) { status.textContent = 'Error al cargar imágenes.'; return; }
-
       if (!data.images.length) { status.textContent = 'No hay imágenes guardadas todavía.'; return; }
-      status.textContent = `${data.images.length} imagen${data.images.length !== 1 ? 'es' : ''} disponible${data.images.length !== 1 ? 's' : ''}`;
-
+      const n = data.images.length;
+      status.textContent = `${n} imagen${n !== 1 ? 'es' : ''} disponible${n !== 1 ? 's' : ''}`;
       data.images.forEach(img => {
         const div = document.createElement('div');
-        div.style.cssText = 'cursor:pointer;border:2px solid #e5e7eb;border-radius:10px;overflow:hidden;transition:border-color .15s;';
+        div.style.cssText = 'cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;overflow:hidden;transition:border-color .15s;';
         div.onmouseenter = () => div.style.borderColor = '#6B3217';
         div.onmouseleave = () => div.style.borderColor = '#e5e7eb';
-        div.innerHTML = `<img src="${img.url}" style="width:100%;height:100px;object-fit:cover;display:block;" loading="lazy">`;
-        div.onclick = () => selectExistingImage(img.url);
+        div.innerHTML = `<img src="${img.url}" style="width:100%;height:90px;object-fit:cover;display:block;" loading="lazy">`;
+        div.onclick = () => selectPickedImage(img.url);
         grid.appendChild(div);
       });
     } catch (e) {
@@ -512,51 +678,22 @@ Te esperamos en Principessa Pastelería 🎂</textarea>
     }
   }
 
-  function selectExistingImage(url) {
-    document.getElementById('promoImageUrl').value = url;
-    const thumb = document.getElementById('imageThumbnail');
-    thumb.src = url;
-    thumb.style.display = 'block';
-    document.getElementById('imagePlaceholder').style.display = 'none';
-    document.getElementById('imageStatusRow').style.display = 'block';
-    document.getElementById('imageStatusRow').style.color = '#059669';
-    document.getElementById('imageStatusRow').textContent = '✓ Imagen seleccionada';
-    document.getElementById('imageDropzone').style.borderColor = '#6ee7b7';
-    document.getElementById('clearImageBtn').style.display = 'inline-block';
-    closeImagePicker();
+  function selectPickedImage(url) {
+    const slot = activePickerSlot;
+    document.getElementById(`imageUrl_${slot}`).value = url;
+    const thumb = document.getElementById(`thumb_${slot}`);
+    thumb.src = url; thumb.style.display = 'block';
+    document.getElementById(`ph_${slot}`).style.display = 'none';
+    const st = document.getElementById(`imgStatus_${slot}`);
+    st.style.display = 'block'; st.style.color = '#059669'; st.textContent = '✓ Imagen seleccionada';
+    document.getElementById(`dropzone_${slot}`).style.borderColor = '#6ee7b7';
+    document.getElementById(`clearImg_${slot}`).style.display = 'inline-block';
+    closePicker();
   }
 
-  function closeImagePicker() {
-    document.getElementById('imagePickerModal').classList.remove('open');
-  }
+  function closePicker() { document.getElementById('imagePickerModal').classList.remove('open'); }
 
-  function clearImage() {
-    document.getElementById('imageFile').value = '';
-    document.getElementById('promoImageUrl').value = '';
-    const thumb = document.getElementById('imageThumbnail');
-    thumb.src = '';
-    thumb.style.display = 'none';
-    document.getElementById('imagePlaceholder').style.display = 'block';
-    document.getElementById('imageStatusRow').style.display = 'none';
-    document.getElementById('clearImageBtn').style.display = 'none';
-    document.getElementById('imageDropzone').style.borderColor = '#d1d5db';
-  }
-
-  // drag-and-drop on the dropzone
-  const dropzone = document.getElementById('imageDropzone');
-  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.borderColor = '#93c5fd'; });
-  dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = document.getElementById('promoImageUrl').value ? '#6ee7b7' : '#d1d5db'; });
-  dropzone.addEventListener('drop', e => {
-    e.preventDefault();
-    const dt = e.dataTransfer;
-    if (dt.files.length) {
-      const input = document.getElementById('imageFile');
-      input.files = dt.files;
-      handleImageSelect(input);
-    }
-  });
-
-  // Ctrl+Enter / Cmd+Enter previews from any field
+  // Ctrl+Enter previews
   document.addEventListener('keydown', e => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') renderPreview();
   });
