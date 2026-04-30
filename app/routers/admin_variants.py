@@ -1,3 +1,4 @@
+import math
 import os
 import smtplib
 import uuid
@@ -160,7 +161,7 @@ class GenerateRequest(BaseModel):
 
 _ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 _UPLOADS_DIR = TEMPLATES_DIR.parent / "static" / "uploads"
-_SUPABASE_BUCKET = "email-images"
+_SUPABASE_BUCKET = "promo-images"
 _MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB
 
 
@@ -260,88 +261,131 @@ def email_builder():
     return HTMLResponse(content=page.render())
 
 
+def _format_ars(amount: int) -> str:
+    return "$" + f"{amount:,}".replace(",", ".")
+
+
+def _build_products(fields: dict) -> list[dict]:
+    """Build a list of product dicts from flat form fields (product_1_*, product_2_*, product_3_*)."""
+    products = []
+    for n in range(1, 4):
+        name = (fields.get(f"product_{n}_name") or "").strip()
+        if not name:
+            continue
+        raw_img = (fields.get(f"product_{n}_image_url") or "").strip()
+        base_url = BASE_URL.rstrip("/")
+        image_url = (base_url + raw_img) if raw_img.startswith("/") else raw_img
+
+        try:
+            price_int = int((fields.get(f"product_{n}_price") or "").strip())
+        except (ValueError, TypeError):
+            price_int = None
+
+        try:
+            discount_pct = int((fields.get(f"product_{n}_discount") or "").strip())
+        except (ValueError, TypeError):
+            discount_pct = None
+
+        has_discount = bool(price_int and discount_pct and discount_pct > 0)
+        price_display = _format_ars(price_int) if price_int else None
+        discounted_display = None
+        if has_discount:
+            discounted = math.ceil(price_int * (1 - discount_pct / 100) / 100) * 100
+            discounted_display = _format_ars(discounted)
+
+        products.append({
+            "image_url":               image_url or None,
+            "name":                    name,
+            "desc":                    (fields.get(f"product_{n}_desc") or "").strip() or None,
+            "price_display":           price_display,
+            "discount_pct":            discount_pct if has_discount else None,
+            "discounted_price_display": discounted_display,
+            "has_discount":            has_discount,
+        })
+    return products
+
+
 @router.post("/admin/email-builder/render", response_class=Response, dependencies=[Depends(require_builder_key)])
 def email_builder_render(
-    subject_line:     str = Form(default=""),
-    preview_text:     str = Form(default=""),
-    headline:         str = Form(default=""),
-    highlight_phrase: str = Form(default=""),
-    body_intro:       str = Form(default=""),
-    block_1_emoji:    str = Form(default=""),
-    block_1_title:    str = Form(default=""),
-    block_1_text:     str = Form(default=""),
-    block_2_emoji:    str = Form(default=""),
-    block_2_title:    str = Form(default=""),
-    block_2_text:     str = Form(default=""),
-    closing_message:  str = Form(default=""),
-    promo_image_url:  str = Form(default=""),
+    subject_line:       str = Form(default=""),
+    title:              str = Form(default=""),
+    intro_text:         str = Form(default=""),
+    product_1_name:     str = Form(default=""),
+    product_1_desc:     str = Form(default=""),
+    product_1_price:    str = Form(default=""),
+    product_1_discount: str = Form(default=""),
+    product_1_image_url: str = Form(default=""),
+    product_2_name:     str = Form(default=""),
+    product_2_desc:     str = Form(default=""),
+    product_2_price:    str = Form(default=""),
+    product_2_discount: str = Form(default=""),
+    product_2_image_url: str = Form(default=""),
+    product_3_name:     str = Form(default=""),
+    product_3_desc:     str = Form(default=""),
+    product_3_price:    str = Form(default=""),
+    product_3_discount: str = Form(default=""),
+    product_3_image_url: str = Form(default=""),
+    promo_text:         str = Form(default=""),
+    promo_code:         str = Form(default=""),
 ):
-    """Render ai_variant_email.html with the posted form values and return raw HTML."""
+    """Render promo_email.html with the posted form values and return raw HTML."""
     base_url = BASE_URL.rstrip("/")
-    image_url = (base_url + promo_image_url) if promo_image_url.startswith("/") else promo_image_url
-    template = jinja_env.get_template("ai_variant_email.html")
+    fields = {k: v for k, v in locals().items() if k not in ("base_url",)}
+    products = _build_products(fields)
+    template = jinja_env.get_template("promo_email.html")
     html = template.render(
-        logo_url          = f"{base_url}/static/logo.png",
-        headline          = headline,
-        highlight_phrase  = highlight_phrase,
-        body_intro        = body_intro,
-        block_1_emoji     = block_1_emoji,
-        block_1_title     = block_1_title,
-        block_1_text      = block_1_text,
-        block_2_emoji     = block_2_emoji,
-        block_2_title     = block_2_title,
-        block_2_text      = block_2_text,
-        closing_message   = closing_message,
-        promo_image_url   = image_url or None,
-        terms_line        = TERMS_LINE,
-        maps_url          = MAPS_URL,
-        whatsapp_url      = WHATSAPP_URL,
-        address           = ADDRESS,
-        hours             = HOURS,
-        instagram_url     = INSTAGRAM_URL,
-        instagram_handle  = INSTAGRAM_HANDLE,
-        unsubscribe_url   = "#",
+        logo_url        = "/static/logo.png",
+        subject_line    = subject_line,
+        title           = title.strip() or None,
+        intro_text      = intro_text.strip() or None,
+        products        = products,
+        promo_text      = promo_text.strip() or None,
+        promo_code      = promo_code.strip() or None,
+        whatsapp_url    = WHATSAPP_URL,
+        instagram_url   = INSTAGRAM_URL,
+        instagram_handle = INSTAGRAM_HANDLE,
+        unsubscribe_url = "#",
     )
     return Response(content=html, media_type="text/html; charset=utf-8")
 
 
-def _form_fields():
-    """Shared Form declarations for builder endpoints."""
-    return {}  # placeholder — fields are declared per-endpoint
-
-
 def _render_builder_email(fields: dict, to_email: str = "#") -> tuple[str, str, str]:
-    """Returns (subject, text_body, html_body) from raw form field dict."""
+    """Returns (subject, text_body, html_body) from a promo_v1 payload dict."""
     base_url = BASE_URL.rstrip("/")
-    subject   = fields.get("subject_line") or "Novedades de Principessa Pastelería"
-    headline  = fields.get("headline", "")
-    hp        = fields.get("highlight_phrase", "")
-    bi        = fields.get("body_intro", "")
-    closing   = fields.get("closing_message", "")
+    subject  = (fields.get("subject_line") or "Novedades de Principessa Pastelería").strip()
     unsubscribe_url = f"{base_url}/unsubscribe?channel=email&value={to_email}" if to_email != "#" else "#"
 
-    raw_img = fields.get("promo_image_url", "").strip()
-    image_url = (base_url + raw_img) if raw_img.startswith("/") else raw_img
+    products = _build_products(fields)
+    title    = (fields.get("title") or "").strip()
+    intro    = (fields.get("intro_text") or "").strip()
+    promo_t  = (fields.get("promo_text") or "").strip() or None
+    promo_c  = (fields.get("promo_code") or "").strip() or None
 
-    text_body = f"{headline}\n\n{hp}\n\n{bi}\n\n{closing}\n\nDarte de baja:\n{unsubscribe_url}\n"
-    html_body = jinja_env.get_template("ai_variant_email.html").render(
+    lines = [subject, ""]
+    if title:
+        lines += [title, ""]
+    if intro:
+        lines += [intro, ""]
+    for p in products:
+        lines.append(p["name"])
+        if p.get("desc"):   lines.append(p["desc"])
+        if p.get("price"):  lines.append(p["price"])
+        if p.get("discount"): lines.append(p["discount"])
+        lines.append("")
+    if promo_t: lines += [promo_t, ""]
+    if promo_c: lines += [f"Código: {promo_c}", ""]
+    lines += ["Pedidos con 48 hs de anticipación.", "", f"Darte de baja:\n{unsubscribe_url}"]
+    text_body = "\n".join(lines)
+
+    html_body = jinja_env.get_template("promo_email.html").render(
         logo_url         = f"{base_url}/static/logo.png",
-        headline         = headline,
-        highlight_phrase = hp,
-        body_intro       = bi,
-        block_1_emoji    = fields.get("block_1_emoji", ""),
-        block_1_title    = fields.get("block_1_title", ""),
-        block_1_text     = fields.get("block_1_text", ""),
-        block_2_emoji    = fields.get("block_2_emoji", ""),
-        block_2_title    = fields.get("block_2_title", ""),
-        block_2_text     = fields.get("block_2_text", ""),
-        closing_message  = closing,
-        promo_image_url  = image_url or None,
-        terms_line       = TERMS_LINE,
-        maps_url         = MAPS_URL,
+        subject_line     = subject,
+        title            = title or None,
+        intro_text       = intro or None,
+        products         = products,
+        promo_text       = promo_t,
+        promo_code       = promo_c,
         whatsapp_url     = WHATSAPP_URL,
-        address          = ADDRESS,
-        hours            = HOURS,
         instagram_url    = INSTAGRAM_URL,
         instagram_handle = INSTAGRAM_HANDLE,
         unsubscribe_url  = unsubscribe_url,
@@ -393,29 +437,43 @@ def _send_approval_notification_send(queued_count: int, subject_preview: str, ap
 
 @router.post("/admin/email-builder/queue", dependencies=[Depends(require_builder_key)])
 def builder_queue(
-    subject_line:     str = Form(default=""),
-    preview_text:     str = Form(default=""),
-    headline:         str = Form(default=""),
-    highlight_phrase: str = Form(default=""),
-    body_intro:       str = Form(default=""),
-    block_1_emoji:    str = Form(default=""),
-    block_1_title:    str = Form(default=""),
-    block_1_text:     str = Form(default=""),
-    block_2_emoji:    str = Form(default=""),
-    block_2_title:    str = Form(default=""),
-    block_2_text:     str = Form(default=""),
-    closing_message:  str = Form(default=""),
-    promo_image_url:  str = Form(default=""),
+    subject_line:       str = Form(default=""),
+    title:              str = Form(default=""),
+    intro_text:         str = Form(default=""),
+    product_1_name:     str = Form(default=""),
+    product_1_desc:     str = Form(default=""),
+    product_1_price:    str = Form(default=""),
+    product_1_discount: str = Form(default=""),
+    product_1_image_url: str = Form(default=""),
+    product_2_name:     str = Form(default=""),
+    product_2_desc:     str = Form(default=""),
+    product_2_price:    str = Form(default=""),
+    product_2_discount: str = Form(default=""),
+    product_2_image_url: str = Form(default=""),
+    product_3_name:     str = Form(default=""),
+    product_3_desc:     str = Form(default=""),
+    product_3_price:    str = Form(default=""),
+    product_3_discount: str = Form(default=""),
+    product_3_image_url: str = Form(default=""),
+    promo_text:         str = Form(default=""),
+    promo_code:         str = Form(default=""),
     db: Session = Depends(get_db),
 ):
-    """Queue the current builder email to all eligible customers."""
+    """Queue a promo_v1 email to all eligible customers."""
+    import json as _json
     batch_id = str(uuid.uuid4())
     fields = dict(
-        subject_line=subject_line, preview_text=preview_text,
-        headline=headline, highlight_phrase=highlight_phrase, body_intro=body_intro,
-        block_1_emoji=block_1_emoji, block_1_title=block_1_title, block_1_text=block_1_text,
-        block_2_emoji=block_2_emoji, block_2_title=block_2_title, block_2_text=block_2_text,
-        closing_message=closing_message, promo_image_url=promo_image_url,
+        subject_line=subject_line, title=title, intro_text=intro_text,
+        product_1_name=product_1_name, product_1_desc=product_1_desc,
+        product_1_price=product_1_price, product_1_discount=product_1_discount,
+        product_1_image_url=product_1_image_url,
+        product_2_name=product_2_name, product_2_desc=product_2_desc,
+        product_2_price=product_2_price, product_2_discount=product_2_discount,
+        product_2_image_url=product_2_image_url,
+        product_3_name=product_3_name, product_3_desc=product_3_desc,
+        product_3_price=product_3_price, product_3_discount=product_3_discount,
+        product_3_image_url=product_3_image_url,
+        promo_text=promo_text, promo_code=promo_code,
     )
 
     result = db.execute(text("""
@@ -426,7 +484,7 @@ def builder_queue(
             gen_random_uuid(),
             ci.customer_id,
             ci.id,
-            'ai_variant_v1',
+            'promo_v1',
             'email',
             CAST(:payload AS jsonb),
             'queued',
@@ -448,7 +506,7 @@ def builder_queue(
           )
     """), {
         "batch_id": batch_id,
-        "payload": __import__("json").dumps({**fields, "batch_id": batch_id}),
+        "payload": _json.dumps({**fields, "batch_id": batch_id}),
     })
 
     db.commit()
@@ -460,7 +518,7 @@ def builder_clear_queue(db: Session = Depends(get_db)):
     result = db.execute(text("""
         DELETE FROM message_outbox
         WHERE status = 'queued'
-          AND template_key = 'ai_variant_v1'
+          AND template_key = 'promo_v1'
           AND channel = 'email'
     """))
     db.commit()
@@ -469,7 +527,7 @@ def builder_clear_queue(db: Session = Depends(get_db)):
 
 @router.post("/admin/email-builder/send-queued", dependencies=[Depends(require_builder_key)])
 def builder_send_queued(db: Session = Depends(get_db)):
-    """Send all queued ai_variant_v1 outbox items now."""
+    """Send all queued promo_v1 outbox items now."""
     mode       = os.getenv("EMAIL_SEND_MODE", "TEST").upper()
     test_to    = os.getenv("TEST_TO_EMAIL", "").strip()
     smtp_ready = all(os.getenv(k) for k in ["SMTP_HOST", "SMTP_USERNAME", "SMTP_PASSWORD", "SMTP_FROM_EMAIL"])
@@ -482,7 +540,7 @@ def builder_send_queued(db: Session = Depends(get_db)):
         FROM message_outbox mo
         JOIN customer_identities ci ON ci.id = mo.to_identity_id
         WHERE mo.status = 'queued'
-          AND mo.template_key = 'ai_variant_v1'
+          AND mo.template_key = 'promo_v1'
           AND mo.channel = 'email'
           AND mo.scheduled_for <= now()
         ORDER BY mo.created_at
@@ -550,7 +608,7 @@ def request_send_approval(db: Session = Depends(get_db)):
         SELECT COUNT(*) AS n, MIN(payload->>'subject_line') AS subject
         FROM message_outbox
         WHERE status = 'queued'
-          AND template_key = 'ai_variant_v1'
+          AND template_key = 'promo_v1'
           AND channel = 'email'
           AND scheduled_for <= now()
     """)).first()
@@ -601,7 +659,7 @@ def approve_send(token: str, db: Session = Depends(get_db)):
         FROM message_outbox mo
         JOIN customer_identities ci ON ci.id = mo.to_identity_id
         WHERE mo.status = 'queued'
-          AND mo.template_key = 'ai_variant_v1'
+          AND mo.template_key = 'promo_v1'
           AND mo.channel = 'email'
           AND mo.scheduled_for <= now()
         ORDER BY mo.created_at

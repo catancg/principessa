@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>{{ subject_line }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&display=swap" rel="stylesheet" type="text/css">
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <style>table{border-collapse:collapse;}td{mso-line-height-rule:exactly;}</style>
+  <![endif]-->
+  <style>
+    body, #bodyTable { margin: 0; padding: 0; background-color: #FBF4EE; font-family: 'Helvetica Neue', Arial, sans-serif; }
+    img { border: 0; outline: 0; text-decoration: none; -ms-interpolation-mode: bicubic; }
+    a { text-decoration: none; }
+    @media only screen and (max-width: 620px) {
+      .email-wrapper  { width: 100% !important; }
+      .inner-padding  { padding: 24px 18px 32px !important; }
+      .product-card td { padding: 16px 18px 20px !important; }
+    }
+  </style>
+</head>
+<body>
+<table id="bodyTable" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#FBF4EE" role="presentation">
+  <tr>
+    <td align="center" style="padding: 28px 12px;">
+
+      <table class="email-wrapper" width="580" cellpadding="0" cellspacing="0" border="0" role="presentation" style="max-width: 580px; width: 100%;">
+
+        <!-- gradient bar top -->
+        <tr>
+          <td height="6" style="background: linear-gradient(90deg,#C8956A 0%,#E8A045 30%,#6B3217 70%,#8B5E3C 100%); border-radius: 12px 12px 0 0; font-size: 1px; line-height: 1px; mso-line-height-rule: exactly;">&nbsp;</td>
+        </tr>
+
+        <!-- main white card -->
+        <tr>
+          <td bgcolor="#ffffff" class="inner-padding" style="border-radius: 0 0 12px 12px; padding: 36px 44px 44px;">
+
+            <!-- logo -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+              <tr>
+                <td align="center" style="padding-bottom: 8px;">
+                  <img src="{{ logo_url }}" width="240" alt="Principessa Pastelería" style="display: block; width: 240px; height: auto;">
+                </td>
+              </tr>
+            </table>
+
+            {% if title %}
+            <!-- title -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+              <tr>
+                <td align="center" style="padding-bottom: 12px;">
+                  <p style="margin: 0; font-family: 'Lora', Georgia, serif; font-size: 26px; font-weight: 700; line-height: 1.25; color: #3D1F0E; text-align: center;">{{ title }}</p>
+                </td>
+              </tr>
+            </table>
+            {% endif %}
+
+            {% if intro_text %}
+            <!-- intro -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+              <tr>
+                <td align="center" style="padding-bottom: 32px;">
+                  <p style="margin: 0; font-size: 17px; line-height: 1.65; color: #444444; text-align: center; max-width: 460px;">{{ intro_text }}</p>
+                </td>
+              </tr>
+            </table>
+            {% endif %}
+
+            {% for product in products %}
+            <!-- product card -->
+            <table class="product-card" width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom: 20px; border-radius: 12px; border: 1px solid #F0E8E0; overflow: hidden;">
+              {% if product.image_url %}
+              <tr>
+                <td style="padding: 0; line-height: 0; font-size: 0; border-radius: 12px 12px 12px 12px; overflow: hidden;">
+                  <img src="{{ product.image_url }}" width="100%" alt="{{ product.name }}" style="display: block; width: 100%; height: auto; border-radius: 12px 12px 12px 12px;">
+                </td>
+              </tr>
+              {% endif %}
+              <tr>
+                <td style="padding: 14px 24px 22px; background: #ffffff; border-radius: {% if product.image_url %}0 0 12px 12px{% else %}12px{% endif %};">
+                  <p style="margin: 0 0 6px; font-family: 'Lora', Georgia, serif; font-size: 21px; font-weight: 700; line-height: 1.25; color: #3D1F0E;">{{ product.name }}</p>
+                  {% if product.desc %}
+                  <p style="margin: 0 0 10px; font-size: 13px; line-height: 1.65; color: #6B7280; letter-spacing: 0.1px;">{{ product.desc }}</p>
+                  {% endif %}
+                  {% if product.price_display %}
+                  {% if product.has_discount %}
+                  <p style="margin: 0;">
+                    <span style="font-family: 'Lora', Georgia, serif; font-size: 20px; font-weight: 700; color: #8B3A0F;">{{ product.discounted_price_display }}</span>
+                    <span style="font-size: 13px; color: #9CA3AF; text-decoration: line-through; margin-left: 8px;">{{ product.price_display }}</span>
+                    <span style="font-size: 15px; font-weight: 700; color: #8B3A0F; margin-left: 8px;">{{ product.discount_pct }}% OFF</span>
+                  </p>
+                  {% else %}
+                  <p style="margin: 0; font-family: 'Lora', Georgia, serif; font-size: 20px; font-weight: 700; color: #3D1F0E;">{{ product.price_display }}</p>
+                  {% endif %}
+                  {% endif %}
+                </td>
+              </tr>
+            </table>
+            {% endfor %}
+
+            {% if promo_text or promo_code %}
+            <!-- promo block -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom: 24px; border-radius: 12px; background-color: #FBF4EE;">
+              <tr>
+                <td align="center" style="padding: 20px 28px;">
+                  {% if promo_text %}
+                  <p style="margin: 0 0 12px; font-size: 16px; font-weight: 700; line-height: 1.5; color: #6B3217; text-align: center;">{{ promo_text }}</p>
+                  {% endif %}
+                  {% if promo_code %}
+                  <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin: 0 auto;">
+                    <tr>
+                      <td bgcolor="#6B3217" style="border-radius: 8px; padding: 8px 22px;">
+                        <span style="font-family: 'Courier New', Courier, monospace; font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: 3px;">{{ promo_code }}</span>
+                      </td>
+                    </tr>
+                  </table>
+                  {% endif %}
+                </td>
+              </tr>
+            </table>
+            {% endif %}
+
+            <!-- 48hs reminder -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom: 28px;">
+              <tr>
+                <td style="padding: 12px 16px; background-color: #FAF6F2; border-radius: 8px; border-left: 3px solid #E8A045;">
+                  <p style="margin: 0; font-size: 13px; line-height: 1.55; color: #7B6A62;">
+                    <strong style="color: #6B3217;">&#9200; Recordá:</strong> Los pedidos se hacen con <strong>72&nbsp;hs de anticipación</strong>. ¡Escribinos con tiempo para que tu torta esté perfecta! 🎂
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- WhatsApp CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom: 16px;">
+              <tr>
+                <td align="center">
+                  <table cellpadding="0" cellspacing="0" border="0" role="presentation">
+                    <tr>
+                      <td bgcolor="#25D366" style="border-radius: 12px;">
+                        <a href="{{ whatsapp_url }}" target="_blank" style="display: inline-block; padding: 16px 36px; font-size: 17px; font-weight: 700; color: #ffffff; text-decoration: none; border-radius: 12px; white-space: nowrap;">&#128172; Hacer mi pedido por WhatsApp</a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Instagram link -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom: 36px;">
+              <tr>
+                <td align="center">
+                  <p style="margin: 0; font-size: 14px; color: #9CA3AF;">
+                    También podés escribirnos por Instagram:&nbsp;<a href="{{ instagram_url }}" target="_blank" style="color: #6B3217; font-weight: 700; text-decoration: none;">{{ instagram_handle }}</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- divider -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="margin-bottom: 20px;">
+              <tr>
+                <td style="border-top: 1px solid #F0E8E0; font-size: 1px; line-height: 1px;">&nbsp;</td>
+              </tr>
+            </table>
+
+            <!-- footer -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+              <tr>
+                <td align="center">
+                  <p style="margin: 0 0 4px; font-size: 12px; color: #9CA3AF;">Principessa Pastelería — Ciudad de Buenos Aires</p>
+                  <p style="margin: 0; font-size: 12px; color: #C8B8B0;">
+                    <a href="{{ unsubscribe_url }}" target="_blank" style="color: #C8B8B0; text-decoration: underline;">Darme de baja</a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+          </td>
+        </tr>
+
+        <!-- gradient bar bottom -->
+        <tr>
+          <td height="6" style="background: linear-gradient(90deg,#C8956A 0%,#E8A045 30%,#6B3217 70%,#8B5E3C 100%); border-radius: 0 0 12px 12px; font-size: 1px; line-height: 1px; mso-line-height-rule: exactly;">&nbsp;</td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

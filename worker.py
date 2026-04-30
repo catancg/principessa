@@ -1,3 +1,4 @@
+import math
 import os
 import time
 import smtplib
@@ -129,6 +130,77 @@ def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
             instagram_url=INSTAGRAM_URL,
             instagram_handle=INSTAGRAM_HANDLE,
             unsubscribe_url=unsubscribe_url,
+        )
+        return subject, text_body, html_body
+
+    if template_key == "promo_v1":
+        subject = (payload.get("subject_line") or "Novedades de Principessa Pastelería").strip()
+        title   = (payload.get("title") or "").strip()
+        intro   = (payload.get("intro_text") or "").strip()
+        promo_t = (payload.get("promo_text") or "").strip() or None
+        promo_c = (payload.get("promo_code") or "").strip() or None
+
+        def _fmt(amount: int) -> str:
+            return "$" + f"{amount:,}".replace(",", ".")
+
+        products = []
+        for n in range(1, 4):
+            name = (payload.get(f"product_{n}_name") or "").strip()
+            if not name:
+                continue
+            raw_img = (payload.get(f"product_{n}_image_url") or "").strip()
+            img_url = (base_url + raw_img) if raw_img.startswith("/") else raw_img
+            try:
+                price_int = int((payload.get(f"product_{n}_price") or "").strip())
+            except (ValueError, TypeError):
+                price_int = None
+            try:
+                discount_pct = int((payload.get(f"product_{n}_discount") or "").strip())
+            except (ValueError, TypeError):
+                discount_pct = None
+            has_discount = bool(price_int and discount_pct and discount_pct > 0)
+            price_display = _fmt(price_int) if price_int else None
+            discounted_display = None
+            if has_discount:
+                discounted = math.ceil(price_int * (1 - discount_pct / 100) / 100) * 100
+                discounted_display = _fmt(discounted)
+            products.append({
+                "image_url":                img_url or None,
+                "name":                     name,
+                "desc":                     (payload.get(f"product_{n}_desc") or "").strip() or None,
+                "price_display":            price_display,
+                "discount_pct":             discount_pct if has_discount else None,
+                "discounted_price_display": discounted_display,
+                "has_discount":             has_discount,
+            })
+
+        lines = [subject, ""]
+        if title: lines += [title, ""]
+        if intro: lines += [intro, ""]
+        for p in products:
+            lines.append(p["name"])
+            if p.get("desc"):     lines.append(p["desc"])
+            if p.get("price"):    lines.append(p["price"])
+            if p.get("discount"): lines.append(p["discount"])
+            lines.append("")
+        if promo_t: lines += [promo_t, ""]
+        if promo_c: lines += [f"Código: {promo_c}", ""]
+        lines += ["Pedidos con 48 hs de anticipación.", "", f"Darte de baja:\n{unsubscribe_url}"]
+        text_body = "\n".join(lines)
+
+        template = jinja_env.get_template("promo_email.html")
+        html_body = template.render(
+            logo_url         = f"{base_url}/static/logo.png",
+            subject_line     = subject,
+            title            = title or None,
+            intro_text       = intro or None,
+            products         = products,
+            promo_text       = promo_t,
+            promo_code       = promo_c,
+            whatsapp_url     = WHATSAPP_URL,
+            instagram_url    = INSTAGRAM_URL,
+            instagram_handle = INSTAGRAM_HANDLE,
+            unsubscribe_url  = unsubscribe_url,
         )
         return subject, text_body, html_body
 
