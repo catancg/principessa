@@ -8,10 +8,10 @@ from app.db.session import get_db
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 def require_admin_key(x_admin_key: str | None = Header(default=None)):
-    expected = os.getenv("ADMIN_API_KEY")
-    if not expected:
-        raise HTTPException(status_code=500, detail="ADMIN_API_KEY is not configured")
-    if not x_admin_key or x_admin_key != expected:
+    valid = {k for k in [os.getenv("ADMIN_API_KEY"), os.getenv("BUILDER_API_KEY")] if k}
+    if not valid:
+        raise HTTPException(status_code=500, detail="No API keys configured")
+    if x_admin_key not in valid:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 @router.get("/summary", dependencies=[Depends(require_admin_key)])
