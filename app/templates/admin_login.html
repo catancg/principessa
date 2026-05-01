@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acceso — Admin Principessa</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Nunito', Arial, sans-serif;
+      background: #FBF4EE;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .logo {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      margin-bottom: 16px;
+    }
+    .logo-fallback {
+      font-size: 36px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 900;
+      color: #111;
+      margin-bottom: 6px;
+    }
+    p {
+      font-size: 14px;
+      color: #6b7280;
+      margin-bottom: 28px;
+    }
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+      transition: border-color .15s;
+      margin-bottom: 16px;
+    }
+    input[type="password"]:focus { border-color: #6B3217; }
+    button {
+      width: 100%;
+      padding: 13px;
+      background: #6B3217;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    button:hover { opacity: .88; }
+    .error {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #dc2626;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="/static/logo.png" class="logo" onerror="this.style.display='none';document.getElementById('emoji').style.display='block'" alt="Principessa Pastelería">
+    <div class="logo-fallback" id="emoji" style="display:none">🎂</div>
+    <h1>Admin</h1>
+    <p>Ingresá tu contraseña para acceder</p>
+    <input type="password" id="pwd" placeholder="Contraseña" autofocus>
+    <button onclick="login()">Ingresar</button>
+    <div class="error" id="err">Contraseña incorrecta</div>
+  </div>
+
+  <script>
+    document.getElementById('pwd').addEventListener('keydown', e => {
+      if (e.key === 'Enter') login();
+    });
+
+    async function login() {
+      const key = document.getElementById('pwd').value.trim();
+      if (!key) return;
+
+      const res = await fetch('/admin/email-builder/render', {
+        method: 'POST',
+        headers: { 'x-admin-key': key },
+        body: new FormData(),
+      });
+
+      if (res.ok || res.status === 422) {
+        sessionStorage.setItem('adminKey', key);
+        window.location.replace('/admin/ui');
+      } else {
+        document.getElementById('err').style.display = 'block';
+        document.getElementById('pwd').focus();
+      }
+    }
+  </script>
+</body>
+</html>
