@@ -107,7 +107,8 @@
 
       if (res.ok || res.status === 422) {
         sessionStorage.setItem('builderKey', key);
-        window.location.replace('/admin/email-builder');
+        const next = new URLSearchParams(window.location.search).get('next') || '/admin/email-builder';
+        window.location.replace(next);
       } else {
         document.getElementById('err').style.display = 'block';
         document.getElementById('pwd').focus();
