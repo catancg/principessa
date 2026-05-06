@@ -192,7 +192,7 @@ def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
 
         template = jinja_env.get_template("promo_email.html")
         html_body = template.render(
-            logo_url         = f"{base_url}/static/logo_cream.png",
+            logo_url         = f"{base_url}/static/logo_cream.png?v=2",
             subject_line     = subject,
             title            = title or None,
             intro_text       = intro or None,
@@ -220,7 +220,7 @@ def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
         template = jinja_env.get_template("birthday_email.html")
         html_body = template.render(
             name=name,
-            logo_url=f"{base_url}/static/logo_cream.png",
+            logo_url=f"{base_url}/static/logo_cream.png?v=2",
             whatsapp_url=WHATSAPP_URL,
             instagram_url=INSTAGRAM_URL,
             instagram_handle=INSTAGRAM_HANDLE,
