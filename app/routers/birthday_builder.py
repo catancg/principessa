@@ -86,7 +86,7 @@ def birthday_builder_render(
 ):
     html = jinja_env.get_template("birthday_email.html").render(
         name="María",
-        logo_url="/static/logo_cream.png",
+        logo_url=f"{BASE_URL}/static/logo_cream.png",
         whatsapp_url=WHATSAPP_URL,
         instagram_url=INSTAGRAM_URL,
         instagram_handle=INSTAGRAM_HANDLE,

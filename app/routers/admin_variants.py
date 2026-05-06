@@ -334,7 +334,7 @@ def email_builder_render(
     products = _build_products(fields)
     template = jinja_env.get_template("promo_email.html")
     html = template.render(
-        logo_url        = "/static/logo_cream.png",
+        logo_url        = f"{base_url}/static/logo_cream.png",
         subject_line    = subject_line,
         title           = title.strip() or None,
         intro_text      = intro_text.strip() or None,
