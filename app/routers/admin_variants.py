@@ -661,13 +661,18 @@ def approve_send(token: str, db: Session = Depends(get_db)):
     approval.decided_at = datetime.now(timezone.utc)
     db.commit()
 
-    # release to worker by moving scheduled_for to now()
+    # release to worker by moving scheduled_for to now(), offset per row to avoid unique constraint
     result = db.execute(text("""
-        UPDATE message_outbox
-        SET scheduled_for = now()
-        WHERE status = 'queued'
-          AND template_key = 'promo_v1'
-          AND channel = 'email'
+        UPDATE message_outbox mo
+        SET scheduled_for = now() + (sub.rn - 1) * interval '1 millisecond'
+        FROM (
+            SELECT id, row_number() OVER (ORDER BY created_at) AS rn
+            FROM message_outbox
+            WHERE status = 'queued'
+              AND template_key = 'promo_v1'
+              AND channel = 'email'
+        ) sub
+        WHERE mo.id = sub.id
     """))
     released = result.rowcount
     db.commit()
