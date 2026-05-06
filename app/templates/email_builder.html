@@ -190,17 +190,17 @@
       <div class="field">
         <label>Ocasión</label>
         <select name="occasion" id="occasionSel" onchange="onOccasionChange()">
-          <option value="weekend">Promo de fin de semana 🎉</option>
-          <option value="birthday">Cumpleaños / fecha especial 🎂</option>
-          <option value="seasonal">Novedad de temporada 🌸</option>
-          <option value="other">Otra ocasión ✨</option>
+          <option value="weekly">Promo semanal 🎉</option>
+          <option value="monthly">Promo del mes 🍰</option>
+          <option value="special">Promo por fecha especial 🌸</option>
+          <option value="news">Novedades ✨</option>
         </select>
       </div>
 
       <div class="field">
         <label>Asunto del email</label>
         <input type="text" name="subject_line" id="subjectLine" maxlength="70"
-               value="¡Fin de semana dulce en Principessa! 🍰">
+               value="¡Promo semanal en Principessa! 🎉">
         <div class="hint">Máx. 70 caracteres</div>
       </div>
 
@@ -431,12 +431,12 @@ Brisa</textarea>
 
   // ── occasion → subject ────────────────────────────────────────────────────
   const OCCASION_SUBJECTS = {
-    weekend:  '¡Fin de semana dulce en Principessa! 🍰',
-    birthday: '¿Cumpleaños a la vista? ¡Tenemos algo especial para vos! 🎂',
-    seasonal: '¡Novedades de temporada en Principessa Pastelería! 🌸',
-    other:    '¡Novedades de Principessa Pastelería! ✨',
+    weekly:  '¡Promo semanal en Principessa! 🎉',
+    monthly: '¡Promo del mes en Principessa! 🍰',
+    special: '¡Promo especial en Principessa! 🌸',
+    news:    '¡Novedades de Principessa Pastelería! ✨',
   };
-  let lastOccasionSubject = OCCASION_SUBJECTS.weekend;
+  let lastOccasionSubject = OCCASION_SUBJECTS.weekly;
 
   function onOccasionChange() {
     const sel = document.getElementById('occasionSel');
