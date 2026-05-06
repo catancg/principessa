@@ -587,7 +587,9 @@ Brisa</textarea>
       if (data.notification_sent) {
         setResult('sendResult', `Email de aprobación enviado (${data.count} en cola) ✓`, 'info');
       } else {
-        setResult('sendResult', `Aprobación pendiente (${data.count} en cola). <a href="${data.approve_url}" target="_blank" style="color:#6B3217;font-weight:700;">Aprobar envío →</a>`, 'info');
+        const el = document.getElementById('sendResult');
+        el.innerHTML = `Aprobación pendiente (${data.count} en cola). <a href="${data.approve_url}" target="_blank" style="color:#6B3217;font-weight:700;">Aprobar envío →</a>`;
+        el.className = 'result-tag result-info';
       }
       btn.disabled = true;
     } catch (e) {
