@@ -584,7 +584,11 @@ Brisa</textarea>
       const res = await fetch('/admin/email-builder/request-send-approval', { method: 'POST', headers: { 'x-admin-key': adminKey } });
       const data = await res.json();
       if (!res.ok) { setResult('sendResult', 'Error: ' + (data.detail || res.status), 'err'); return; }
-      setResult('sendResult', `Email de aprobación enviado (${data.count} en cola) ✓`, 'info');
+      if (data.notification_sent) {
+        setResult('sendResult', `Email de aprobación enviado (${data.count} en cola) ✓`, 'info');
+      } else {
+        setResult('sendResult', `Aprobación pendiente (${data.count} en cola). <a href="${data.approve_url}" target="_blank" style="color:#6B3217;font-weight:700;">Aprobar envío →</a>`, 'info');
+      }
       btn.disabled = true;
     } catch (e) {
       setResult('sendResult', 'Error de red', 'err');

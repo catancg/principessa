@@ -488,7 +488,7 @@ def builder_queue(
             'email',
             CAST(:payload AS jsonb),
             'queued',
-            now(),
+            now() + interval '10 years',
             now()
         FROM customer_identities ci
         JOIN (
@@ -630,14 +630,25 @@ def request_send_approval(db: Session = Depends(get_db)):
     approve_url = f"{base}/admin/email-builder/send-approval/{approval.token}/approve"
     cancel_url  = f"{base}/admin/email-builder/send-approval/{approval.token}/cancel"
 
-    _send_approval_notification_send(
-        queued_count=queued_count,
-        subject_preview=subject_preview,
-        approve_url=approve_url,
-        cancel_url=cancel_url,
-    )
+    notification_sent = True
+    try:
+        _send_approval_notification_send(
+            queued_count=queued_count,
+            subject_preview=subject_preview,
+            approve_url=approve_url,
+            cancel_url=cancel_url,
+        )
+    except Exception as e:
+        notification_sent = False
+        print(f"[approval] SMTP notification failed: {e}")
 
-    return {"status": "approval_sent", "count": queued_count}
+    return {
+        "status": "approval_sent",
+        "count": queued_count,
+        "notification_sent": notification_sent,
+        "approve_url": approve_url,
+        "cancel_url": cancel_url,
+    }
 
 
 @router.get("/admin/email-builder/send-approval/{token}/approve", response_class=HTMLResponse)
@@ -650,53 +661,19 @@ def approve_send(token: str, db: Session = Depends(get_db)):
     approval.decided_at = datetime.now(timezone.utc)
     db.commit()
 
-    # trigger the actual send
-    mode    = os.getenv("EMAIL_SEND_MODE", "TEST").upper()
-    test_to = os.getenv("TEST_TO_EMAIL", "").strip()
-
-    rows = db.execute(text("""
-        SELECT mo.id, ci.value AS to_email, mo.payload
-        FROM message_outbox mo
-        JOIN customer_identities ci ON ci.id = mo.to_identity_id
-        WHERE mo.status = 'queued'
-          AND mo.template_key = 'promo_v1'
-          AND mo.channel = 'email'
-          AND mo.scheduled_for <= now()
-        ORDER BY mo.created_at
-        FOR UPDATE SKIP LOCKED
-    """)).fetchall()
-
-    sent_ids, failed_ids = [], []
-    for outbox_id, original_to, payload in rows:
-        fields = dict(payload or {})
-        fields["email"] = original_to
-        try:
-            subject, text_body, html_body = _render_builder_email(fields, to_email=original_to)
-            if mode == "DRY_RUN":
-                sent_ids.append(outbox_id)
-                continue
-            to_addr = test_to if mode == "TEST" and test_to else original_to
-            if mode == "TEST":
-                subject   = f"[TEST] {subject}"
-                text_body = f"MODO PRUEBA — original: {original_to}\n\n{text_body}"
-                html_body = (f"<div style='padding:8px;background:#fff3cd;font-size:12px;'>"
-                             f"MODO PRUEBA — original: {original_to}</div>" + html_body)
-            _smtp_send(to_addr, subject, text_body, html_body)
-            sent_ids.append(outbox_id)
-        except Exception:
-            failed_ids.append(outbox_id)
-
-    if sent_ids:
-        db.execute(text("UPDATE message_outbox SET status='sent', sent_at=now() WHERE id = ANY(:ids)"),
-                   {"ids": sent_ids})
-    if failed_ids:
-        db.execute(text("UPDATE message_outbox SET status='failed' WHERE id = ANY(:ids)"),
-                   {"ids": failed_ids})
-
+    # release to worker by moving scheduled_for to now()
+    result = db.execute(text("""
+        UPDATE message_outbox
+        SET scheduled_for = now()
+        WHERE status = 'queued'
+          AND template_key = 'promo_v1'
+          AND channel = 'email'
+    """))
+    released = result.rowcount
     db.commit()
 
     page = jinja_env.get_template("send_approval.html")
-    return HTMLResponse(page.render(action="approved", sent=len(sent_ids), failed=len(failed_ids)))
+    return HTMLResponse(page.render(action="approved", sent=released, failed=0))
 
 
 @router.get("/admin/email-builder/send-approval/{token}/cancel", response_class=HTMLResponse)
