@@ -103,6 +103,8 @@ def admin_customers_interests(
           c.id::text,
           c.first_name,
           c.created_at::text,
+          c.birth_month,
+          c.birth_day,
           (select ci.value
            from customer_identities ci
            where ci.customer_id = c.id and ci.channel = 'email'

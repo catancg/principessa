@@ -190,7 +190,7 @@ def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
 
         template = jinja_env.get_template("promo_email.html")
         html_body = template.render(
-            logo_url         = f"{base_url}/static/logo.png",
+            logo_url         = f"{base_url}/static/logo_cream.png",
             subject_line     = subject,
             title            = title or None,
             intro_text       = intro or None,
@@ -201,6 +201,32 @@ def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
             instagram_url    = INSTAGRAM_URL,
             instagram_handle = INSTAGRAM_HANDLE,
             unsubscribe_url  = unsubscribe_url,
+        )
+        return subject, text_body, html_body
+
+    if template_key == "birthday_v1":
+        name = payload.get("name", "")
+        subject = f"¡Feliz Cumpleaños, {name}! 🎂 Un regalo dulce te espera"
+        text_body = (
+            f"¡Feliz Cumpleaños, {name}!\n\n"
+            "En Principessa queremos celebrar tu día especial con vos.\n"
+            "Presentá este email en nuestra pastelería y disfrutá un beneficio especial de cumpleaños.\n\n"
+            f"WhatsApp: {WHATSAPP_URL}\n"
+            f"Instagram: {INSTAGRAM_URL}\n\n"
+            f"Darte de baja:\n{unsubscribe_url}\n"
+        )
+        template = jinja_env.get_template("birthday_email.html")
+        html_body = template.render(
+            name=name,
+            logo_url=f"{base_url}/static/logo_cream.png",
+            whatsapp_url=WHATSAPP_URL,
+            instagram_url=INSTAGRAM_URL,
+            instagram_handle=INSTAGRAM_HANDLE,
+            unsubscribe_url=unsubscribe_url,
+            promo_code=payload.get("promo_code") or None,
+            promo_text=payload.get("promo_text") or None,
+            image_url=payload.get("image_url") or None,
+            discount_text=payload.get("discount_text") or "10% de descuento",
         )
         return subject, text_body, html_body
 

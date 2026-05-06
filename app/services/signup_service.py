@@ -89,6 +89,19 @@ def create_signup(db: Session, data) -> tuple[str, str, bool]:
             identity_id = row2.identity_id
             customer_id = row2.customer_id
 
+    # 3b) Save birthday if both fields provided
+    birth_month = getattr(data, "birth_month", None)
+    birth_day = getattr(data, "birth_day", None)
+    if birth_month and birth_day:
+        db.execute(
+            text("""
+                update customers
+                set birth_month = :bm, birth_day = :bd, updated_at = now()
+                where id = :cid
+            """),
+            {"bm": birth_month, "bd": birth_day, "cid": customer_id},
+        )
+
     # 4) Consent: insert granted only if NOT currently granted
     if getattr(data, "consent_promotions", True):
         db.execute(

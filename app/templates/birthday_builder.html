@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Birthday Builder — Principessa</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', system-ui, Arial, sans-serif; background: #f8f9fa; color: #111; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    nav { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 12px 20px; display: flex; align-items: center; gap: 24px; flex-shrink: 0; }
+    .nav-brand { font-weight: 900; font-size: 16px; color: #111; margin-right: 8px; }
+    .nav-link { text-decoration: none; font-size: 14px; color: #555; }
+    .nav-link.active { color: #6B3217; border-bottom: 2px solid #6B3217; padding-bottom: 2px; font-weight: 700; }
+    .layout { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Left panel ── */
+    .panel-left { width: 340px; flex-shrink: 0; background: #fff; border-right: 1px solid #e0e0e0; overflow-y: auto; display: flex; flex-direction: column; }
+    .panel-header { padding: 16px 20px 12px; border-bottom: 1px solid #f0f0f0; }
+    .panel-header h2 { font-size: 16px; font-weight: 900; color: #111; }
+    .panel-header p { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    .form-body { padding: 16px 20px; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+
+    .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6b7280; margin-bottom: 8px; }
+    label { display: block; font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 5px; }
+    input[type=text], textarea { width: 100%; font-family: inherit; font-size: 13px; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; color: #111; resize: vertical; }
+    input[type=text]:focus, textarea:focus { outline: none; border-color: #6B3217; }
+    textarea { min-height: 72px; }
+
+    .dropzone { border: 2px dashed #d1d5db; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; position: relative; }
+    .dropzone:hover, .dropzone.drag { border-color: #6B3217; background: #FBF4EE; }
+    .dropzone p { font-size: 13px; color: #6b7280; pointer-events: none; }
+    .dropzone small { font-size: 11px; color: #9ca3af; display: block; margin-top: 4px; pointer-events: none; }
+    .img-preview { width: 100%; border-radius: 8px; margin-bottom: 8px; display: block; max-height: 140px; object-fit: cover; }
+    .remove-img { font-size: 12px; color: #dc2626; cursor: pointer; text-decoration: underline; display: inline-block; margin-top: 4px; }
+    .pick-img { font-size: 12px; color: #6B3217; cursor: pointer; text-decoration: underline; display: inline-block; margin-top: 4px; margin-left: 10px; }
+    .upload-progress { font-size: 12px; color: #6b7280; margin-top: 6px; }
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100; align-items: center; justify-content: center; }
+    .modal-backdrop.open { display: flex; }
+    .modal { background: #fff; border-radius: 16px; padding: 28px 24px; max-width: 520px; width: 95%; box-shadow: 0 8px 32px rgba(0,0,0,.18); }
+    .modal h2 { font-size: 17px; font-weight: 900; margin-bottom: 8px; color: #111; }
+    .modal-status { font-size: 13px; color: #6b7280; margin-bottom: 12px; }
+    .modal-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; max-height: 320px; overflow-y: auto; margin-bottom: 16px; }
+    .modal-actions { display: flex; justify-content: flex-end; }
+    .btn-close-modal { font-family: inherit; font-size: 13px; font-weight: 700; padding: 8px 18px; background: #f3f4f6; color: #374151; border: none; border-radius: 8px; cursor: pointer; }
+
+    .footer { padding: 16px 20px; border-top: 1px solid #f0f0f0; display: flex; align-items: center; gap: 10px; }
+    .btn-save { flex: 1; padding: 11px; background: #6B3217; color: #fff; border: none; border-radius: 9px; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity .15s; }
+    .btn-save:hover { opacity: .88; }
+    .btn-save:disabled { opacity: .5; cursor: default; }
+    .save-status { font-size: 12px; color: #059669; min-height: 16px; }
+    .save-status.err { color: #dc2626; }
+
+    /* ── Right panel ── */
+    .panel-right { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .preview-header { padding: 12px 20px; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; gap: 10px; background: #fff; }
+    .preview-header h3 { font-size: 14px; font-weight: 700; color: #374151; }
+    .preview-tag { font-size: 11px; background: #FBF4EE; color: #8B5E3C; border: 1px solid #E8D5C4; border-radius: 99px; padding: 2px 10px; font-weight: 700; }
+    iframe#preview { flex: 1; border: none; background: #f8f9fa; width: 100%; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-brand">Principessa Pastelería</span>
+  <a href="/admin/ui" class="nav-link">Dashboard</a>
+  <a href="/admin/ui/customers" class="nav-link">Clientes</a>
+  <a href="/admin/email-builder" class="nav-link">Email Builder</a>
+  <a href="/admin/birthday-builder" class="nav-link active">Cumpleaños</a>
+</nav>
+
+<div class="layout">
+
+  <!-- Left: form -->
+  <aside class="panel-left">
+    <div class="panel-header">
+      <h2>Email de Cumpleaños</h2>
+      <p>Los cambios guardados se aplican a todos los emails futuros.</p>
+    </div>
+
+    <div class="form-body">
+
+      <!-- Image -->
+      <div>
+        <p class="section-title">Imagen</p>
+        <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+          <img id="imgPreview" class="img-preview" style="display:none" alt="preview">
+          <p id="dropText">Hacé clic o arrastrá una imagen</p>
+          <small>JPEG, PNG, WEBP · Máx 5 MB</small>
+          <div class="upload-progress" id="uploadProgress"></div>
+        </div>
+        <span class="remove-img" id="removeImg" style="display:none" onclick="removeImage()">Quitar imagen</span>
+        <span class="pick-img" onclick="openPicker()">📂 Imagen existente</span>
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none">
+        <input type="hidden" id="imageUrl" value="">
+      </div>
+
+      <!-- Promo -->
+      <div>
+        <p class="section-title">Oferta especial</p>
+        <div style="margin-bottom:12px;">
+          <label for="promoCode">Código de descuento <span style="font-weight:400;color:#9ca3af;">(opcional)</span></label>
+          <input type="text" id="promoCode" placeholder="Ej: CUMPLE20" oninput="schedulePreview()">
+        </div>
+        <div>
+          <label for="discountText">Texto del descuento</label>
+          <input type="text" id="discountText" placeholder="Ej: 10% de descuento" oninput="schedulePreview()">
+        </div>
+        <div>
+          <label for="promoText">Descripción de la oferta <span style="font-weight:400;color:#9ca3af;">(opcional)</span></label>
+          <textarea id="promoText" placeholder="Ej: 20% off en tu próxima visita a la pastelería." oninput="schedulePreview()"></textarea>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+        <button class="btn-save" id="saveBtn" onclick="save()">Guardar cambios</button>
+        <span class="save-status" id="saveStatus"></span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right: preview -->
+  <div class="panel-right">
+    <div class="preview-header">
+      <h3>Vista previa</h3>
+      <span class="preview-tag">cumpleaños · "María"</span>
+    </div>
+    <iframe id="preview" title="preview"></iframe>
+  </div>
+
+</div>
+
+<script>
+  const KEY = sessionStorage.getItem('builderKey') || '';
+  if (!KEY) window.location.replace('/builder-login?next=/admin/birthday-builder');
+
+  let previewTimer = null;
+
+  // ── Load existing config ────────────────────────────────────────────────────
+  async function loadConfig() {
+    try {
+      const res = await fetch('/admin/birthday-builder/config', { headers: { 'x-admin-key': KEY } });
+      if (res.status === 401) { window.location.replace('/builder-login?next=/admin/birthday-builder'); return; }
+      const d = await res.json();
+      document.getElementById('promoCode').value    = d.promo_code    || '';
+      document.getElementById('promoText').value    = d.promo_text    || '';
+      document.getElementById('discountText').value = d.discount_text || '10% de descuento';
+      if (d.image_url) setImage(d.image_url);
+    } catch(e) { console.error('loadConfig:', e); }
+    updatePreview();
+  }
+
+  // ── Image handling ──────────────────────────────────────────────────────────
+  function setImage(url) {
+    document.getElementById('imageUrl').value = url;
+    const img = document.getElementById('imgPreview');
+    img.src = url; img.style.display = 'block';
+    document.getElementById('dropText').style.display = 'none';
+    document.getElementById('removeImg').style.display = 'inline-block';
+  }
+
+  function removeImage() {
+    document.getElementById('imageUrl').value = '';
+    document.getElementById('imgPreview').style.display = 'none';
+    document.getElementById('dropText').style.display = 'block';
+    document.getElementById('removeImg').style.display = 'none';
+    schedulePreview();
+  }
+
+  document.getElementById('fileInput').addEventListener('change', async function() {
+    const file = this.files[0];
+    if (!file) return;
+    await uploadFile(file);
+    this.value = '';
+  });
+
+  const dz = document.getElementById('dropzone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+  dz.addEventListener('drop', async e => {
+    e.preventDefault(); dz.classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file) await uploadFile(file);
+  });
+
+  async function uploadFile(file) {
+    const prog = document.getElementById('uploadProgress');
+    prog.textContent = 'Subiendo…';
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const res = await fetch('/admin/birthday-builder/upload-image', {
+        method: 'POST', headers: { 'x-admin-key': KEY }, body: fd,
+      });
+      if (!res.ok) { const t = await res.text(); prog.textContent = 'Error: ' + t.slice(0,80); return; }
+      const { url } = await res.json();
+      setImage(url);
+      prog.textContent = '';
+      schedulePreview();
+    } catch(e) { prog.textContent = 'Error al subir imagen.'; }
+  }
+
+  // ── Preview ─────────────────────────────────────────────────────────────────
+  function schedulePreview() {
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(updatePreview, 400);
+  }
+
+  async function updatePreview() {
+    const fd = new FormData();
+    fd.append('promo_code',    document.getElementById('promoCode').value);
+    fd.append('promo_text',    document.getElementById('promoText').value);
+    fd.append('image_url',     document.getElementById('imageUrl').value);
+    fd.append('discount_text', document.getElementById('discountText').value);
+    try {
+      const res = await fetch('/admin/birthday-builder/render', {
+        method: 'POST', headers: { 'x-admin-key': KEY }, body: fd,
+      });
+      if (!res.ok) return;
+      const html = await res.text();
+      const iframe = document.getElementById('preview');
+      const blob = new Blob([html], { type: 'text/html' });
+      const old = iframe.src;
+      iframe.src = URL.createObjectURL(blob);
+      if (old && old.startsWith('blob:')) URL.revokeObjectURL(old);
+    } catch(e) { console.error('preview:', e); }
+  }
+
+  // ── Save ────────────────────────────────────────────────────────────────────
+  async function save() {
+    const btn = document.getElementById('saveBtn');
+    const status = document.getElementById('saveStatus');
+    btn.disabled = true;
+    status.textContent = '';
+    status.className = 'save-status';
+    const fd = new FormData();
+    fd.append('discount_text', document.getElementById('discountText').value);
+    fd.append('promo_code', document.getElementById('promoCode').value);
+    fd.append('promo_text', document.getElementById('promoText').value);
+    fd.append('image_url',  document.getElementById('imageUrl').value);
+    try {
+      const res = await fetch('/admin/birthday-builder/save', {
+        method: 'POST', headers: { 'x-admin-key': KEY }, body: fd,
+      });
+      if (res.ok) {
+        status.textContent = '✓ Guardado';
+        setTimeout(() => { status.textContent = ''; }, 3000);
+      } else {
+        status.textContent = 'Error al guardar.';
+        status.className = 'save-status err';
+      }
+    } catch(e) {
+      status.textContent = 'Error al guardar.';
+      status.className = 'save-status err';
+    }
+    btn.disabled = false;
+  }
+
+  // ── Image picker ─────────────────────────────────────────────────────────────
+  async function openPicker() {
+    document.getElementById('imagePickerModal').classList.add('open');
+    const grid   = document.getElementById('imageGrid');
+    const status = document.getElementById('imagePickerStatus');
+    grid.innerHTML = ''; status.textContent = 'Cargando...';
+    try {
+      const res  = await fetch('/admin/email-builder/images', { headers: { 'x-admin-key': KEY } });
+      const data = await res.json();
+      if (!res.ok || !data.images.length) { status.textContent = 'No hay imágenes guardadas todavía.'; return; }
+      const n = data.images.length;
+      status.textContent = `${n} imagen${n !== 1 ? 'es' : ''} disponible${n !== 1 ? 's' : ''}`;
+      data.images.forEach(img => {
+        const div = document.createElement('div');
+        div.style.cssText = 'cursor:pointer;border:2px solid #e5e7eb;border-radius:8px;overflow:hidden;transition:border-color .15s;';
+        div.onmouseenter = () => div.style.borderColor = '#6B3217';
+        div.onmouseleave = () => div.style.borderColor = '#e5e7eb';
+        div.innerHTML = `<img src="${img.url}" style="width:100%;height:90px;object-fit:cover;display:block;" loading="lazy">`;
+        div.onclick = () => { setImage(img.url); schedulePreview(); closePicker(); };
+        grid.appendChild(div);
+      });
+    } catch(e) { status.textContent = 'Error de red.'; }
+  }
+
+  function closePicker() { document.getElementById('imagePickerModal').classList.remove('open'); }
+
+  loadConfig();
+</script>
+
+<!-- Image picker modal -->
+<div class="modal-backdrop" id="imagePickerModal">
+  <div class="modal">
+    <h2>Seleccionar imagen existente</h2>
+    <p class="modal-status" id="imagePickerStatus">Cargando...</p>
+    <div class="modal-grid" id="imageGrid"></div>
+    <div class="modal-actions">
+      <button class="btn-close-modal" onclick="closePicker()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -334,7 +334,7 @@ def email_builder_render(
     products = _build_products(fields)
     template = jinja_env.get_template("promo_email.html")
     html = template.render(
-        logo_url        = "/static/logo.png",
+        logo_url        = "/static/logo_cream.png",
         subject_line    = subject_line,
         title           = title.strip() or None,
         intro_text      = intro_text.strip() or None,
@@ -378,7 +378,7 @@ def _render_builder_email(fields: dict, to_email: str = "#") -> tuple[str, str, 
     text_body = "\n".join(lines)
 
     html_body = jinja_env.get_template("promo_email.html").render(
-        logo_url         = f"{base_url}/static/logo.png",
+        logo_url         = f"{base_url}/static/logo_cream.png",
         subject_line     = subject,
         title            = title or None,
         intro_text       = intro or None,

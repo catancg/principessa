@@ -9,6 +9,12 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Nunito', Arial, sans-serif; background: #f3f4f6; color: #333; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
+    /* nav */
+    .nav { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 12px 20px; display: flex; align-items: center; gap: 24px; flex-shrink: 0; }
+    .nav-brand { font-weight: 900; font-size: 16px; color: #111; margin-right: 8px; }
+    .nav-link { text-decoration: none; font-size: 14px; color: #555; }
+    .nav-link.active { color: #6B3217; border-bottom: 2px solid #6B3217; padding-bottom: 2px; font-weight: 700; }
+
     /* top bar */
     .topbar {
       background: #fff; border-bottom: 1px solid #e5e7eb;
@@ -147,6 +153,13 @@
 </head>
 <body>
 
+<nav class="nav">
+  <span class="nav-brand">Principessa Pastelería</span>
+  <a href="/admin/ui" class="nav-link">Dashboard</a>
+  <a href="/admin/ui/customers" class="nav-link">Clientes</a>
+  <a href="/admin/email-builder" class="nav-link active">Email Builder</a>
+  <a href="/admin/birthday-builder" class="nav-link">Cumpleaños</a>
+</nav>
 <div class="topbar">
   <span class="badge">Builder</span>
   <h1>Email Builder — Principessa Pastelería</h1>

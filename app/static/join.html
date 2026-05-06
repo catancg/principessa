@@ -32,6 +32,28 @@
     <input placeholder="Tu nombre" name="name" required />
     <input placeholder="Tu email (ejemplo@gmail.com)" name="email" type="email" required />
 
+    <p style="margin-top:16px;margin-bottom:0;font-size:13px;color:#7A5840;text-align:center;">¿Cuándo es tu cumpleaños? <span style="opacity:.65;">(opcional — para sorprenderte)</span></p>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <select name="birth_day" style="flex:1;margin-top:0;">
+        <option value="">Día</option>
+      </select>
+      <select name="birth_month" style="flex:1;margin-top:0;">
+        <option value="">Mes</option>
+        <option value="1">Enero</option>
+        <option value="2">Febrero</option>
+        <option value="3">Marzo</option>
+        <option value="4">Abril</option>
+        <option value="5">Mayo</option>
+        <option value="6">Junio</option>
+        <option value="7">Julio</option>
+        <option value="8">Agosto</option>
+        <option value="9">Septiembre</option>
+        <option value="10">Octubre</option>
+        <option value="11">Noviembre</option>
+        <option value="12">Diciembre</option>
+      </select>
+    </div>
+
     <button type="submit" style="margin-top: 20px;">Quiero recibir novedades</button>
   </form>
 
@@ -43,6 +65,28 @@
   <p id="msg" style="text-align:center;margin-top:16px;font-weight:700;color:#6B3217;"></p>
 
   <script>
+    // Days per month (index 1-12), using 2000 as leap year so Feb has 29
+    const DAYS_IN_MONTH = [0,31,29,31,30,31,30,31,31,30,31,30,31];
+
+    function rebuildDays(maxDay, currentDay) {
+      const sel = document.querySelector('select[name="birth_day"]');
+      const prev = parseInt(sel.value, 10) || currentDay;
+      while (sel.options.length > 1) sel.remove(1);
+      for (let d = 1; d <= maxDay; d++) {
+        const o = document.createElement('option');
+        o.value = d; o.textContent = d;
+        sel.appendChild(o);
+      }
+      if (prev && prev <= maxDay) sel.value = prev;
+    }
+
+    rebuildDays(31, null);
+
+    document.querySelector('select[name="birth_month"]').addEventListener('change', function() {
+      const m = parseInt(this.value, 10);
+      rebuildDays(m ? DAYS_IN_MONTH[m] : 31, null);
+    });
+
     const form = document.getElementById("form");
     const done = document.getElementById("done");
     const msg  = document.getElementById("msg");
@@ -59,11 +103,16 @@
       const fd    = new FormData(form);
       const name  = (fd.get("name")  || "").toString().trim();
       const email = (fd.get("email") || "").toString().trim();
+      const bdDay   = parseInt(fd.get("birth_day")   || "", 10) || null;
+      const bdMonth = parseInt(fd.get("birth_month") || "", 10) || null;
+
+      const payload = { name, email, interests: [], consent_promotions: true };
+      if (bdDay && bdMonth) { payload.birth_day = bdDay; payload.birth_month = bdMonth; }
 
       const res = await fetch("/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, interests: [], consent_promotions: true })
+        body: JSON.stringify(payload)
       });
 
       if (res.ok) {
