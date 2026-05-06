@@ -1,8 +1,8 @@
 import json
+from datetime import date, timedelta, datetime, timezone
 
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from datetime import datetime, timezone
 
 from app.schemas.signup import SignupIn
 ALLOWED_INTERESTS = {"torta_ricota", "cheesecake", "torta_matilda", "carrot_cake", "ricota_dulce_leche", "torta_balcarce"}
@@ -89,6 +89,20 @@ def create_signup(db: Session, data) -> tuple[str, str, bool]:
             identity_id = row2.identity_id
             customer_id = row2.customer_id
 
+    # 3b) Save birthday if both fields provided
+    birth_month = getattr(data, "birth_month", None)
+    birth_day = getattr(data, "birth_day", None)
+    if birth_month and birth_day:
+        db.execute(
+            text("""
+                update customers
+                set birth_month = :bm, birth_day = :bd, updated_at = now()
+                where id = :cid
+            """),
+            {"bm": birth_month, "bd": birth_day, "cid": customer_id},
+        )
+        _schedule_birthday_emails(db, customer_id, identity_id, name, birth_month, birth_day)
+
     # 4) Consent: insert granted only if NOT currently granted
     if getattr(data, "consent_promotions", True):
         db.execute(
@@ -126,3 +140,49 @@ def create_signup(db: Session, data) -> tuple[str, str, bool]:
         )
 
     return customer_id, identity_id, is_new_customer
+
+
+def _schedule_birthday_emails(db, customer_id: int, identity_id: int, name: str, birth_month: int, birth_day: int):
+    today = date.today()
+
+    try:
+        candidate = date(today.year, birth_month, birth_day)
+    except ValueError:
+        candidate = date(today.year, birth_month, 28)
+
+    next_bday = candidate if candidate >= today else _next_year_birthday(today.year + 1, birth_month, birth_day)
+
+    for days_before in (7, 3):
+        send_date = next_bday - timedelta(days=days_before)
+        if send_date < today:
+            continue
+        scheduled_for = datetime(send_date.year, send_date.month, send_date.day, 18, 30, tzinfo=timezone.utc)
+        db.execute(
+            text("""
+                INSERT INTO message_outbox
+                    (customer_id, to_identity_id, channel, template_key, scheduled_for, payload, status)
+                SELECT :cid, :iid, 'email'::channel_type, 'birthday_v1',
+                       :scheduled_for, CAST(:payload AS jsonb), 'queued'
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM message_outbox
+                    WHERE customer_id  = :cid
+                      AND template_key = 'birthday_v1'
+                      AND date_trunc('day', scheduled_for AT TIME ZONE 'UTC') = CAST(:sched_day AS date)
+                      AND status != 'failed'
+                )
+            """),
+            {
+                "cid": customer_id,
+                "iid": identity_id,
+                "scheduled_for": scheduled_for,
+                "payload": json.dumps({"name": name}),
+                "sched_day": str(send_date),
+            },
+        )
+
+
+def _next_year_birthday(year: int, birth_month: int, birth_day: int) -> date:
+    try:
+        return date(year, birth_month, birth_day)
+    except ValueError:
+        return date(year, birth_month, 28)

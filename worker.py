@@ -1,7 +1,9 @@
+import json
 import math
 import os
 import time
 import smtplib
+from datetime import date, timedelta, datetime, timezone
 from pathlib import Path
 from email.message import EmailMessage
 
@@ -190,7 +192,7 @@ def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
 
         template = jinja_env.get_template("promo_email.html")
         html_body = template.render(
-            logo_url         = f"{base_url}/static/logo.png",
+            logo_url         = f"{base_url}/static/logo_cream.png",
             subject_line     = subject,
             title            = title or None,
             intro_text       = intro or None,
@@ -201,6 +203,32 @@ def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
             instagram_url    = INSTAGRAM_URL,
             instagram_handle = INSTAGRAM_HANDLE,
             unsubscribe_url  = unsubscribe_url,
+        )
+        return subject, text_body, html_body
+
+    if template_key == "birthday_v1":
+        name = payload.get("name", "")
+        subject = f"¡Feliz Cumpleaños, {name}! 🎂 Un regalo dulce te espera"
+        text_body = (
+            f"¡Feliz Cumpleaños, {name}!\n\n"
+            "En Principessa queremos celebrar tu día especial con vos.\n"
+            "Presentá este email en nuestra pastelería y disfrutá un beneficio especial de cumpleaños.\n\n"
+            f"WhatsApp: {WHATSAPP_URL}\n"
+            f"Instagram: {INSTAGRAM_URL}\n\n"
+            f"Darte de baja:\n{unsubscribe_url}\n"
+        )
+        template = jinja_env.get_template("birthday_email.html")
+        html_body = template.render(
+            name=name,
+            logo_url=f"{base_url}/static/logo_cream.png",
+            whatsapp_url=WHATSAPP_URL,
+            instagram_url=INSTAGRAM_URL,
+            instagram_handle=INSTAGRAM_HANDLE,
+            unsubscribe_url=unsubscribe_url,
+            promo_code=payload.get("promo_code") or None,
+            promo_text=payload.get("promo_text") or None,
+            image_url=payload.get("image_url") or None,
+            discount_text=payload.get("discount_text") or "10% de descuento",
         )
         return subject, text_body, html_body
 
@@ -225,7 +253,8 @@ def send_smtp(to_email: str, subject: str, text_body: str, html_body: str | None
 
 def fetch_next_batch(db, batch_size: int = 25):
     rows = db.execute(text("""
-        select mo.id, mo.template_key, ci.value as to_email, mo.payload
+        select mo.id, mo.template_key, ci.value as to_email, mo.payload,
+               mo.customer_id, mo.to_identity_id
         from message_outbox mo
         join customer_identities ci on ci.id = mo.to_identity_id
         where mo.status = 'queued'
@@ -236,6 +265,59 @@ def fetch_next_batch(db, batch_size: int = 25):
         limit :limit
     """), {"limit": batch_size}).fetchall()
     return rows
+
+
+def fetch_birthday_config(db) -> dict:
+    row = db.execute(text("""
+        SELECT promo_code, promo_text, image_url, discount_text
+        FROM birthday_campaign_config WHERE id = 1
+    """)).mappings().first()
+    if not row:
+        return {}
+    return {k: v for k, v in dict(row).items() if v is not None}
+
+
+def reschedule_birthday(db, customer_id: int, identity_id: int, name: str):
+    row = db.execute(
+        text("SELECT birth_month, birth_day FROM customers WHERE id = :cid"),
+        {"cid": customer_id},
+    ).first()
+    if not row or not row.birth_month or not row.birth_day:
+        return
+
+    birth_month, birth_day = row.birth_month, row.birth_day
+    next_year = date.today().year + 1
+
+    try:
+        next_bday = date(next_year, birth_month, birth_day)
+    except ValueError:
+        next_bday = date(next_year, birth_month, 28)
+
+    for days_before in (7, 3):
+        send_date = next_bday - timedelta(days=days_before)
+        scheduled_for = datetime(send_date.year, send_date.month, send_date.day, 18, 30, tzinfo=timezone.utc)
+        db.execute(
+            text("""
+                INSERT INTO message_outbox
+                    (customer_id, to_identity_id, channel, template_key, scheduled_for, payload, status)
+                SELECT :cid, :iid, 'email'::channel_type, 'birthday_v1',
+                       :scheduled_for, CAST(:payload AS jsonb), 'queued'
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM message_outbox
+                    WHERE customer_id  = :cid
+                      AND template_key = 'birthday_v1'
+                      AND date_trunc('day', scheduled_for AT TIME ZONE 'UTC') = CAST(:sched_day AS date)
+                      AND status != 'failed'
+                )
+            """),
+            {
+                "cid": customer_id,
+                "iid": identity_id,
+                "scheduled_for": scheduled_for,
+                "payload": json.dumps({"name": name}),
+                "sched_day": str(send_date),
+            },
+        )
 
 
 def mark_sent(db, outbox_id):
@@ -273,11 +355,18 @@ def main():
                 time.sleep(3)
                 continue
 
-            for outbox_id, template_key, to_email, payload in batch:
+            birthday_config = None
+            for outbox_id, template_key, to_email, payload, customer_id, to_identity_id in batch:
                 original_to = to_email
                 try:
                     render_payload = dict(payload or {})
                     render_payload["email"] = original_to
+
+                    if template_key == "birthday_v1":
+                        if birthday_config is None:
+                            birthday_config = fetch_birthday_config(db)
+                        render_payload.update(birthday_config)
+
                     subject, text_body, html_body = render_email(template_key, render_payload)
 
                     if EMAIL_SEND_MODE == "DRY_RUN":
@@ -309,6 +398,9 @@ def main():
                     send_smtp(to_email, subject, text_body, html_body=html_body)
                     mark_sent(db, outbox_id)
                     print("SENT", outbox_id, "->", to_email, "(original:", original_to, ")")
+
+                    if template_key == "birthday_v1":
+                        reschedule_birthday(db, customer_id, to_identity_id, render_payload.get("name", ""))
 
                 except Exception as e:
                     mark_failed(db, outbox_id, repr(e))

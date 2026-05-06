@@ -2,6 +2,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 from app.db.session import SessionLocal
 from app.jobs.weekly_scheduler import queue_weekly_promo
+from app.jobs.birthday_scheduler import queue_birthday_emails
 from datetime import datetime, timezone
 
 def run_weekly():
@@ -13,11 +14,23 @@ def run_weekly():
     finally:
         db.close()
 
+def run_birthday():
+    print("RUN birthday", flush=True)
+    db = SessionLocal()
+    try:
+        info = queue_birthday_emails(db)
+        print("Birthday queue:", info)
+    finally:
+        db.close()
+
 if __name__ == "__main__":
     sched = BlockingScheduler(timezone="UTC")
 
     trigger = CronTrigger(day_of_week="mon", hour=17, minute=50, timezone="UTC")
     job = sched.add_job(run_weekly, trigger, id="weekly", replace_existing=True)
+
+    birthday_trigger = CronTrigger(hour=10, minute=0, timezone="UTC")
+    sched.add_job(run_birthday, birthday_trigger, id="birthday_daily", replace_existing=True)
 
     now = datetime.now(timezone.utc)
 

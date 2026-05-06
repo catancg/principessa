@@ -23,6 +23,7 @@ def _nav(active: str) -> str:
         ("Dashboard",     "/admin/ui"),
         ("Clientes",      "/admin/ui/customers"),
         ("Email Builder", "/admin/email-builder"),
+        ("Cumpleaños",    "/admin/birthday-builder"),
     ]
     links = ""
     for label, href in pages:
@@ -287,6 +288,7 @@ def admin_ui_customers():
         <tr>
           <th onclick="sortBy('first_name')">Nombre <span id="si_first_name"></span></th>
           <th onclick="sortBy('email')">Email <span id="si_email"></span></th>
+          <th onclick="sortBy('birthday_sort')">Cumpleaños <span id="si_birthday_sort"></span></th>
           <th onclick="sortBy('created_at')">Registro <span id="si_created_at">▼</span></th>
         </tr>
       </thead>
@@ -308,10 +310,22 @@ def admin_ui_customers():
       const res = await fetch('/admin/customers/interests?limit=500', {{headers:{{'x-admin-key':KEY}}}});
       if (res.status === 401) {{ window.location.replace('/builder-login?next=/admin/ui/customers'); return; }}
       const d = await res.json();
-      allCustomers = d.customers || [];
+      allCustomers = (d.customers || []).map(c => ({{
+        ...c,
+        birthday_sort: (c.birth_month && c.birth_day)
+          ? c.birth_month * 100 + c.birth_day
+          : 9999,
+      }}));
       document.getElementById('nTotal').textContent = allCustomers.length;
       applyFilters();
     }} catch(e) {{ console.error(e); }}
+  }}
+
+  const MONTHS = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  function fmtBirthday(c) {{
+    if (!c.birth_day || !c.birth_month) return '—';
+    return `${{c.birth_day}} ${{MONTHS[c.birth_month]}}`;
   }}
 
   function applyFilters() {{
@@ -337,7 +351,7 @@ def admin_ui_customers():
   function sortBy(key) {{
     sortDir = (sortKey === key) ? -sortDir : 1;
     sortKey = key;
-    ['first_name','email','created_at'].forEach(k => {{
+    ['first_name','email','birthday_sort','created_at'].forEach(k => {{
       const el = document.getElementById('si_' + k);
       if (el) el.textContent = k === sortKey ? (sortDir === 1 ? '▲' : '▼') : '';
     }});
@@ -347,12 +361,13 @@ def admin_ui_customers():
   function renderTable(rows) {{
     const tbody = document.getElementById('tbody');
     if (!rows.length) {{
-      tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Sin resultados.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-row">Sin resultados.</td></tr>';
       return;
     }}
     tbody.innerHTML = rows.map(c => `<tr>
       <td>${{c.first_name || '—'}}</td>
       <td>${{c.email      || '—'}}</td>
+      <td>${{fmtBirthday(c)}}</td>
       <td>${{(c.created_at || '').slice(0,10)}}</td>
     </tr>`).join('');
   }}
