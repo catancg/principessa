@@ -145,7 +145,15 @@ def admin_ui():
     return `<span class="badge ${{cls}}">${{s}}</span>`;
   }}
 
-  function ts(v) {{ return v ? String(v).replace('T',' ').slice(0,16) : '—'; }}
+  function ts(v) {{
+    if (!v) return '—';
+    let s = String(v).replace(' ', 'T');
+    if (s.length >= 19 && !s.slice(19).match(/[Z+\-]/)) s += 'Z';
+    const d = new Date(s);
+    if (isNaN(d)) return String(v).replace('T',' ').slice(0,16);
+    const art = new Date(d.getTime() - 3 * 60 * 60 * 1000);
+    return art.toISOString().replace('T',' ').slice(0,16) + ' (ART)';
+  }}
 
   function kv(obj) {{
     return '<div class="kv"><table>' +
