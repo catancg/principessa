@@ -2,7 +2,7 @@ import math
 import os
 import smtplib
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from email.message import EmailMessage
 from pathlib import Path
 
@@ -41,6 +41,21 @@ jinja_env = Environment(
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
+
+_ART = timezone(timedelta(hours=-3))
+
+def _thursday_send_time() -> datetime:
+    """Return Thursday 17:00 ART (20:00 UTC) of the current week.
+    If Thursday 17:00 has already passed, returns next week's Thursday."""
+    now_art = datetime.now(_ART)
+    days_to_thursday = (3 - now_art.weekday()) % 7
+    candidate = (now_art + timedelta(days=days_to_thursday)).replace(
+        hour=17, minute=0, second=0, microsecond=0
+    )
+    if candidate <= now_art:
+        candidate += timedelta(weeks=1)
+    return candidate.astimezone(timezone.utc)
+
 
 def require_admin_key(x_admin_key: str | None = Header(default=None)):
     expected = os.getenv("ADMIN_API_KEY")
@@ -476,6 +491,17 @@ def builder_queue(
         promo_text=promo_text, promo_code=promo_code,
     )
 
+    send_time = _thursday_send_time()
+
+    # Clear any existing queued emails for this Thursday before re-inserting
+    db.execute(text("""
+        DELETE FROM message_outbox
+        WHERE status = 'queued'
+          AND template_key = 'promo_v1'
+          AND channel = 'email'
+          AND date_trunc('day', scheduled_for AT TIME ZONE 'UTC') = date_trunc('day', CAST(:scheduled_for AS timestamptz) AT TIME ZONE 'UTC')
+    """), {"scheduled_for": send_time})
+
     result = db.execute(text("""
         INSERT INTO message_outbox (
             id, customer_id, to_identity_id, template_key, channel, payload, status, scheduled_for, created_at
@@ -488,7 +514,7 @@ def builder_queue(
             'email',
             CAST(:payload AS jsonb),
             'queued',
-            now() + interval '10 years',
+            :scheduled_for,
             now()
         FROM customer_identities ci
         JOIN (
@@ -499,13 +525,8 @@ def builder_queue(
         ) latest ON latest.customer_id = ci.customer_id
         WHERE ci.channel = 'email'
           AND latest.status = 'granted'
-          AND NOT EXISTS (
-              SELECT 1 FROM message_outbox mo2
-              WHERE mo2.to_identity_id = ci.id
-                AND (mo2.payload->>'batch_id') = :batch_id
-          )
     """), {
-        "batch_id": batch_id,
+        "scheduled_for": send_time,
         "payload": _json.dumps({**fields, "batch_id": batch_id}),
     })
 
@@ -661,24 +682,14 @@ def approve_send(token: str, db: Session = Depends(get_db)):
     approval.decided_at = datetime.now(timezone.utc)
     db.commit()
 
-    # release to worker by moving scheduled_for to now(), offset per row to avoid unique constraint
-    result = db.execute(text("""
-        UPDATE message_outbox mo
-        SET scheduled_for = now() + (sub.rn - 1) * interval '1 millisecond'
-        FROM (
-            SELECT id, row_number() OVER (ORDER BY created_at) AS rn
-            FROM message_outbox
-            WHERE status = 'queued'
-              AND template_key = 'promo_v1'
-              AND channel = 'email'
-        ) sub
-        WHERE mo.id = sub.id
-    """))
-    released = result.rowcount
-    db.commit()
+    # scheduled_for is already set to Thursday 17:00 ART — worker will send at that time
+    queued_count = db.execute(text("""
+        SELECT COUNT(*) FROM message_outbox
+        WHERE status = 'queued' AND template_key = 'promo_v1' AND channel = 'email'
+    """)).scalar()
 
     page = jinja_env.get_template("send_approval.html")
-    return HTMLResponse(page.render(action="approved", sent=released, failed=0))
+    return HTMLResponse(page.render(action="approved", sent=queued_count, failed=0))
 
 
 @router.get("/admin/email-builder/send-approval/{token}/cancel", response_class=HTMLResponse)

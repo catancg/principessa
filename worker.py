@@ -48,7 +48,7 @@ def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
 
     if template_key == "welcome_v1":
         name = payload.get("name", "")
-        logo_url = f"{base_url}/static/logo.png"
+        logo_url = f"{base_url}/static/logo_cream.png?v=2"
         subject = f"¡Te damos la bienvenida a Principessa, {name}! 🎂"
         text_body = (
             f"Hola {name}!\n\n"
