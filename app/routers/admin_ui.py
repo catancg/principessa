@@ -298,6 +298,7 @@ def admin_ui_customers():
           <th onclick="sortBy('email')">Email <span id="si_email"></span></th>
           <th onclick="sortBy('birthday_sort')">Cumpleaños <span id="si_birthday_sort"></span></th>
           <th onclick="sortBy('created_at')">Registro <span id="si_created_at">▼</span></th>
+          <th onclick="sortBy('consent_status')">Suscripción <span id="si_consent_status"></span></th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -359,17 +360,23 @@ def admin_ui_customers():
   function sortBy(key) {{
     sortDir = (sortKey === key) ? -sortDir : 1;
     sortKey = key;
-    ['first_name','email','birthday_sort','created_at'].forEach(k => {{
+    ['first_name','email','birthday_sort','created_at','consent_status'].forEach(k => {{
       const el = document.getElementById('si_' + k);
       if (el) el.textContent = k === sortKey ? (sortDir === 1 ? '▲' : '▼') : '';
     }});
     applyFilters();
   }}
 
+  function consentBadge(status) {{
+    if (status === 'granted') return '<span style="display:inline-block;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:#d1fae5;color:#065f46;">Activa</span>';
+    if (status === 'revoked') return '<span style="display:inline-block;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:#fee2e2;color:#991b1b;">Baja</span>';
+    return '<span style="display:inline-block;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;background:#f3f4f6;color:#6b7280;">—</span>';
+  }}
+
   function renderTable(rows) {{
     const tbody = document.getElementById('tbody');
     if (!rows.length) {{
-      tbody.innerHTML = '<tr><td colspan="4" class="empty-row">Sin resultados.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-row">Sin resultados.</td></tr>';
       return;
     }}
     tbody.innerHTML = rows.map(c => `<tr>
@@ -377,6 +384,7 @@ def admin_ui_customers():
       <td>${{c.email      || '—'}}</td>
       <td>${{fmtBirthday(c)}}</td>
       <td>${{(c.created_at || '').slice(0,10)}}</td>
+      <td>${{consentBadge(c.consent_status)}}</td>
     </tr>`).join('');
   }}
 

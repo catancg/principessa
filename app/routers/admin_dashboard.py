@@ -108,7 +108,11 @@ def admin_customers_interests(
           (select ci.value
            from customer_identities ci
            where ci.customer_id = c.id and ci.channel = 'email'
-           limit 1) as email
+           limit 1) as email,
+          (select vpc.status::text
+           from v_current_promotions_consent vpc
+           where vpc.customer_id = c.id and vpc.channel = 'email'
+           limit 1) as consent_status
         from customers c
         order by c.created_at desc
         limit :limit

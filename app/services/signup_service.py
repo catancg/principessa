@@ -102,6 +102,14 @@ def create_signup(db: Session, data) -> tuple[str, str, bool]:
             {"bm": birth_month, "bd": birth_day, "cid": customer_id},
         )
         _schedule_birthday_emails(db, customer_id, identity_id, name, birth_month, birth_day)
+    elif not is_new_customer:
+        # Returning subscriber: re-schedule birthday emails if on file but no longer queued
+        bday_row = db.execute(
+            text("SELECT birth_month, birth_day FROM customers WHERE id = :cid"),
+            {"cid": customer_id},
+        ).first()
+        if bday_row and bday_row.birth_month and bday_row.birth_day:
+            _schedule_birthday_emails(db, customer_id, identity_id, name, bday_row.birth_month, bday_row.birth_day)
 
     # 4) Consent: insert granted only if NOT currently granted
     if getattr(data, "consent_promotions", True):

@@ -78,6 +78,17 @@ def unsubscribe(
         {"customer_id": customer_id, "channel": channel}
     )
 
+    # Cancel all pending outbox messages for this customer
+    db.execute(
+        text("""
+            DELETE FROM message_outbox
+            WHERE customer_id = :customer_id
+              AND status = 'queued'
+              AND channel = CAST(:channel AS channel_type)
+        """),
+        {"customer_id": customer_id, "channel": channel}
+    )
+
     db.commit()
 
     return HTMLResponse(
