@@ -5,6 +5,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from email.message import EmailMessage
 from pathlib import Path
+from urllib.parse import quote
 
 import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, Form, Query, UploadFile, File
@@ -100,7 +101,7 @@ def _render_variant_email_html(variant: EmailVariant, to_email: str = "preview@e
         hours=HOURS,
         instagram_url=INSTAGRAM_URL,
         instagram_handle=INSTAGRAM_HANDLE,
-        unsubscribe_url=f"{base_url}/unsubscribe?channel=email&value={to_email}",
+        unsubscribe_url=f"{base_url}/unsubscribe?channel=email&value={quote(to_email)}",
     )
 
 
@@ -368,7 +369,7 @@ def _render_builder_email(fields: dict, to_email: str = "#") -> tuple[str, str, 
     """Returns (subject, text_body, html_body) from a promo_v1 payload dict."""
     base_url = BASE_URL.rstrip("/")
     subject  = (fields.get("subject_line") or "Novedades de Principessa Pastelería").strip()
-    unsubscribe_url = f"{base_url}/unsubscribe?channel=email&value={to_email}" if to_email != "#" else "#"
+    unsubscribe_url = f"{base_url}/unsubscribe?channel=email&value={quote(to_email)}" if to_email != "#" else "#"
 
     products = _build_products(fields)
     title    = (fields.get("title") or "").strip()
@@ -631,7 +632,6 @@ def request_send_approval(db: Session = Depends(get_db)):
         WHERE status = 'queued'
           AND template_key = 'promo_v1'
           AND channel = 'email'
-          AND scheduled_for <= now()
     """)).first()
 
     queued_count = queued_row.n if queued_row else 0
@@ -680,13 +680,22 @@ def approve_send(token: str, db: Session = Depends(get_db)):
 
     approval.status = "approved"
     approval.decided_at = datetime.now(timezone.utc)
-    db.commit()
 
-    # scheduled_for is already set to Thursday 17:00 ART — worker will send at that time
+    # Move scheduled_for to now() so the worker picks them up immediately
+    db.execute(text("""
+        UPDATE message_outbox
+        SET scheduled_for = now()
+        WHERE status = 'queued'
+          AND template_key = 'promo_v1'
+          AND channel = 'email'
+    """))
+
     queued_count = db.execute(text("""
         SELECT COUNT(*) FROM message_outbox
         WHERE status = 'queued' AND template_key = 'promo_v1' AND channel = 'email'
     """)).scalar()
+
+    db.commit()
 
     page = jinja_env.get_template("send_approval.html")
     return HTMLResponse(page.render(action="approved", sent=queued_count, failed=0))

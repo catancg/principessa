@@ -6,6 +6,7 @@ import smtplib
 from datetime import date, timedelta, datetime, timezone
 from pathlib import Path
 from email.message import EmailMessage
+from urllib.parse import quote
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sqlalchemy import text
@@ -44,7 +45,7 @@ TERMS_LINE = "Válido presentando este email en la pastelería Principessa"
 def render_email(template_key: str, payload: dict) -> tuple[str, str, str]:
     email = (payload.get("email") or "").strip()
     base_url = BASE_URL.rstrip("/")
-    unsubscribe_url = f"{base_url}/unsubscribe?channel=email&value={email}"
+    unsubscribe_url = f"{base_url}/unsubscribe?channel=email&value={quote(email)}"
 
     if template_key == "welcome_v1":
         name = payload.get("name", "")
