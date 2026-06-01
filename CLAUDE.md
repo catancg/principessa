@@ -47,18 +47,28 @@ Key constraint: `UNIQUE (customer_id, channel, template_key, scheduled_for)`. Wh
 | `signup.py` | `/signup` | New customer registration; queues `welcome_v1` email |
 | `admin_variants.py` | `/admin` | AI variant generation (GPT-4o-mini), preview, approval flow, promo queueing |
 | `admin_ui.py` | `/admin` | Dashboard and customer list HTML pages |
-| `admin_api.py` | `/admin` | JSON API powering the dashboard (summary, outbox, debug) |
-| `admin_dashboard.py` | `/admin` | Customers list + campaign metrics API |
+| `admin_api.py` | `/admin` | JSON API: `/summary`, `/outbox`, `/debug/identity` |
+| `admin_dashboard.py` | `/admin` | `/customers/interests` (with consent_status), `/customers/recent` |
 | `birthday_builder.py` | `/admin/birthday-builder` | Birthday campaign config UI |
 | `story_builder.py` | `/admin/story-builder` | Instagram story image builder |
-| `unsubscribe.py` | `/unsubscribe` | Consent revocation via signed tokens |
+| `unsubscribe.py` | `/unsubscribe` | Consent revocation — records revoked consent, deletes all queued outbox messages for that customer, returns HTML page |
 | `meta_webhook.py` | `/webhook/meta` | Instagram DM webhook → customer attributes |
+| `admin_campaigns.py` | `/admin` | Legacy `/queue-weekly` endpoint (superseded by email builder) |
+| `admin.py` | `/admin` | Legacy preview/queue endpoints — not registered in main.py |
 
 ### Services
 
-**`app/services/signup_service.py`** — `create_signup()` handles upsert-safe registration, consent grants, and calls `_schedule_birthday_emails()` if birth date is provided.
+**`app/services/signup_service.py`** — `create_signup()` handles upsert-safe registration, consent grants, and `_schedule_birthday_emails()`. For returning subscribers (re-join after unsubscribe), birthday emails are automatically re-queued if birthday data is already on file — `_schedule_birthday_emails()` is idempotent via `NOT EXISTS`.
 
 **`app/services/ai_copy_service.py`** — `generate_variants()` calls GPT-4o-mini and returns two structured email copy options.
+
+### Database view
+
+`v_current_promotions_consent` — used everywhere for consent lookups. Returns the latest consent row per `(customer_id, channel, purpose)`. Always query this view rather than the raw `consents` table when checking current status.
+
+### Unsubscribe URL encoding
+
+All unsubscribe URLs must URL-encode the email address: `f"...&value={quote(email)}"` using `urllib.parse.quote`. This handles `+` signs and other special characters in email addresses. All three places that build this URL are in `worker.py`, `admin_variants.py` (×2).
 
 ### Email templates
 
